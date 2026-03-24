@@ -43,9 +43,14 @@ namespace DeathWorm.Services
                 AnsiConsole.Write(new FigletText("DeathWorm").Color(Color.Red));
                 ShowCurrentSettings();
 
+                var isConnected = client?.IsConnected ?? false;
+                var connectionStatus = isConnected
+                    ? "[green](Verbunden)[/]"
+                    : "[red](Nicht verbunden)[/]";
+
                 var choice = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
-                        .Title("[green]Hauptmenü[/]")
+                        .Title($"[green]Hauptmenü[/] {connectionStatus}")
                         .AddChoices(
                             "Einstellungen bearbeiten",
                             "Verbinden",

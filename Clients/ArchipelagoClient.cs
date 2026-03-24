@@ -16,6 +16,10 @@ namespace DeathWorm.Clients
         private string _userName;
         private string _gameName;
 
+        public bool IsConnected => _session.Socket.Connected;
+
+        public event Action? OnDisconnected;
+
         public ArchipelagoClient(string server, int port, string userName, string gameName)
         {
             _server = server;
@@ -25,6 +29,8 @@ namespace DeathWorm.Clients
 
             _session = ArchipelagoSessionFactory.CreateSession(_server, _port);
 
+            _session.Socket.SocketClosed += OnSocketClosed;
+
             _deathLinkService = _session.CreateDeathLinkService();
             _deathLinkService.OnDeathLinkReceived += OnDeathLinkReceived;
         }
@@ -33,6 +39,13 @@ namespace DeathWorm.Clients
         {
             if (_deathLinkService != null)
                 _deathLinkService.OnDeathLinkReceived -= OnDeathLinkReceived;
+            if (_session?.Socket != null)
+                _session.Socket.SocketClosed -= OnSocketClosed;
+        }
+
+        private void OnSocketClosed(string reason)
+        {
+            OnDisconnected?.Invoke();
         }
 
         private void OnDeathLinkReceived(DeathLink deathLink)
