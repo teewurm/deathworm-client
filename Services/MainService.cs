@@ -8,7 +8,8 @@ namespace DeathWorm.Services
     {
         private readonly IHostApplicationLifetime _lifetime;
 
-        private string _server = "archipelago.gg";
+        //private string _server = "archipelago.gg";
+        private string _server = "localhost";
         private int _port = 38281;
         private string _userName = "deathworm";
         private string _gameName = "Deathworm";
@@ -54,6 +55,7 @@ namespace DeathWorm.Services
                         .AddChoices(
                             "Einstellungen bearbeiten",
                             "Verbinden",
+                            "Verbindung prüfen",
                             "Death Link senden",
                             "Beenden"));
 
@@ -65,6 +67,20 @@ namespace DeathWorm.Services
 
                     case "Verbinden":
                         client = await ConnectAsync();
+                        AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
+                        Console.ReadKey(true);
+                        break;
+
+                    case "Verbindung prüfen":
+                        if (client != null && client.IsConnected)
+                        {
+                            AnsiConsole.MarkupLine("[green]Verbindung ist aktiv.[/]");
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine("[red]Keine aktive Verbindung.[/]");
+                            client = null;
+                        }
                         AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
                         Console.ReadKey(true);
                         break;
