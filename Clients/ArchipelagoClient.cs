@@ -1,6 +1,8 @@
 ﻿using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net.Packets;
+using System.Net.Sockets;
 
 namespace DeathWorm.Clients
 {
@@ -16,7 +18,7 @@ namespace DeathWorm.Clients
         private string _userName;
         private string _gameName;
 
-        public bool IsConnected => _session.Socket.Connected;
+        public event Action<string>? OnPacketReceived;
 
         public ArchipelagoClient(string server, int port, string userName, string gameName)
         {
@@ -27,29 +29,37 @@ namespace DeathWorm.Clients
 
             _session = ArchipelagoSessionFactory.CreateSession(_server, _port);
 
+            _session.Socket.PacketReceived += HandlePacketReceived;
+
+            _session.Socket.ErrorReceived += OnErrorReceived;
+
             _deathLinkService = _session.CreateDeathLinkService();
-            _deathLinkService.OnDeathLinkReceived += OnDeathLinkReceived;
+        }
+
+        private void OnErrorReceived(Exception e, string message)
+        {
+            Console.WriteLine(e.ToString());
         }
 
         ~ArchipelagoClient()
         {
-            if (_deathLinkService != null)
-                _deathLinkService.OnDeathLinkReceived -= OnDeathLinkReceived;
+            if (_session?.Socket != null)
+                _session.Socket.PacketReceived -= HandlePacketReceived;
         }
 
-        private void OnDeathLinkReceived(DeathLink deathLink)
+        private void HandlePacketReceived(ArchipelagoPacketBase packet)
         {
+            OnPacketReceived?.Invoke($"Packet received: {packet.PacketType}");
         }
 
-        public async Task<ConnectResult> ConnectAsync()
+        public ConnectResult Connect()
         {
             LoginResult result;
 
             try
             {
-                await _session.ConnectAsync();
-                result = await _session.LoginAsync(_gameName, _userName, ItemsHandlingFlags.NoItems,
-                    version: null,
+                result = _session.TryConnectAndLogin(_gameName, _userName, ItemsHandlingFlags.AllItems,
+                    version: new Version(0, 6, 6),
                     tags: ["DeathLink"]);
             }
             catch (Exception e)
@@ -80,7 +90,7 @@ namespace DeathWorm.Clients
 
         public void SendDeathLink()
         {
-            _deathLinkService.SendDeathLink(new DeathLink(sourcePlayer: _userName, "Died to exposure."));
+            _deathLinkService.SendDeathLink(new DeathLink(sourcePlayer: _userName, "Fabi ist schuld"));
         }
     }
 }

@@ -7,6 +7,8 @@ namespace DeathWorm.Services
     public class MainService : IHostedService
     {
         private readonly IHostApplicationLifetime _lifetime;
+        private readonly List<string> _packetLog = new();
+        private readonly object _logLock = new();
 
         //private string _server = "archipelago.gg";
         private string _server = "localhost";
@@ -23,7 +25,7 @@ namespace DeathWorm.Services
         {
             _lifetime.ApplicationStarted.Register(() =>
             {
-                Task.Run(() => RunAsync(cancellationToken));
+                Task.Run(() => Run(cancellationToken));
             });
 
             return Task.CompletedTask;
@@ -34,7 +36,32 @@ namespace DeathWorm.Services
             return Task.CompletedTask;
         }
 
-        private async Task RunAsync(CancellationToken cancellationToken)
+        private void OnClientPacketReceived(string message)
+        {
+            lock (_logLock)
+            {
+                _packetLog.Add($"[grey]{DateTime.Now:HH:mm:ss}[/] {message}");
+                if (_packetLog.Count > 5)
+                    _packetLog.RemoveAt(0);
+            }
+        }
+
+        private void ShowPacketLog()
+        {
+            lock (_logLock)
+            {
+                if (_packetLog.Count > 0)
+                {
+                    AnsiConsole.MarkupLine("\n[yellow]Letzte Pakete:[/]");
+                    foreach (var log in _packetLog)
+                    {
+                        AnsiConsole.MarkupLine(log);
+                    }
+                }
+            }
+        }
+
+        private void Run(CancellationToken cancellationToken)
         {
             ArchipelagoClient? client = null;
 
@@ -43,44 +70,30 @@ namespace DeathWorm.Services
                 AnsiConsole.Clear();
                 AnsiConsole.Write(new FigletText("DeathWorm").Color(Color.Red));
                 ShowCurrentSettings();
-
-                var isConnected = client?.IsConnected ?? false;
-                var connectionStatus = isConnected
-                    ? "[green](Verbunden)[/]"
-                    : "[red](Nicht verbunden)[/]";
+                ShowPacketLog();
 
                 var choice = AnsiConsole.Prompt(
                     new SelectionPrompt<string>()
-                        .Title($"[green]Hauptmenü[/] {connectionStatus}")
+                        .Title("[green]Hauptmenü[/]")
                         .AddChoices(
+                            "Aktualisieren",
                             "Einstellungen bearbeiten",
                             "Verbinden",
-                            "Verbindung prüfen",
                             "Death Link senden",
                             "Beenden"));
 
                 switch (choice)
                 {
+                    case "Aktualisieren":
+                        // Menü wird automatisch neu gezeichnet
+                        break;
+
                     case "Einstellungen bearbeiten":
                         EditSettings();
                         break;
 
                     case "Verbinden":
-                        client = await ConnectAsync();
-                        AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
-                        Console.ReadKey(true);
-                        break;
-
-                    case "Verbindung prüfen":
-                        if (client != null && client.IsConnected)
-                        {
-                            AnsiConsole.MarkupLine("[green]Verbindung ist aktiv.[/]");
-                        }
-                        else
-                        {
-                            AnsiConsole.MarkupLine("[red]Keine aktive Verbindung.[/]");
-                            client = null;
-                        }
+                        client = Connect();
                         AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
                         Console.ReadKey(true);
                         break;
@@ -163,7 +176,7 @@ namespace DeathWorm.Services
             AnsiConsole.Write(table);
         }
 
-        private async Task<ArchipelagoClient?> ConnectAsync()
+        private ArchipelagoClient? Connect()
         {
             AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_server}:{_port}...[/]");
 
@@ -173,7 +186,9 @@ namespace DeathWorm.Services
                 userName: _userName,
                 gameName: _gameName);
 
-            var result = await client.ConnectAsync();
+            client.OnPacketReceived += OnClientPacketReceived;
+
+            var result = client.Connect();
 
             if (result.Success)
             {
@@ -184,6 +199,7 @@ namespace DeathWorm.Services
             {
                 AnsiConsole.MarkupLine($"[red]Verbindung fehlgeschlagen![/]");
                 AnsiConsole.MarkupLine($"[red]{Markup.Escape(result.ErrorMessage ?? "Unbekannter Fehler")}[/]");
+                client.OnPacketReceived -= OnClientPacketReceived;
                 return null;
             }
         }
