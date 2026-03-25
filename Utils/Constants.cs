@@ -13,6 +13,7 @@
         public const string Connect = "Verbinden";
         public const string ShowStatus = "Status anzeigen";
         public const string SendDeathLink = "Death Link senden";
+        public const string SendChat = "Chat senden";
         public const string Exit = "Beenden";
 
         // Einstellungsmenü

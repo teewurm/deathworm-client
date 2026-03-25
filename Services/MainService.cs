@@ -69,6 +69,11 @@ namespace DeathWorm.Services
                         _view.WaitForKeyPress();
                         break;
 
+                    case MenuChoices.SendChat:
+                        SendChat();
+                        _view.WaitForKeyPress();
+                        break;
+
                     case MenuChoices.Exit:
                         _lifetime.StopApplication();
                         return;
@@ -137,6 +142,28 @@ namespace DeathWorm.Services
             if (result.Success)
             {
                 _view.ShowDeathLinkSent();
+            }
+            else
+            {
+                _view.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+            }
+        }
+
+        private void SendChat()
+        {
+            var message = _view.PromptChatMessage();
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                _view.ShowChatCancelled();
+                return;
+            }
+
+            var result = _viewModel.Say(message);
+
+            if (result.Success)
+            {
+                _view.ShowChatSent();
             }
             else
             {

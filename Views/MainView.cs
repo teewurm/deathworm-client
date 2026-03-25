@@ -49,6 +49,7 @@ namespace DeathWorm.Views
             {
                 choices.Add(MenuChoices.ShowStatus);
                 choices.Add(MenuChoices.SendDeathLink);
+                choices.Add(MenuChoices.SendChat);
             }
 
             choices.Add(MenuChoices.Exit);
@@ -127,6 +128,23 @@ namespace DeathWorm.Views
             return AnsiConsole.Prompt(
                 new TextPrompt<string>("[blue]Nachricht (leer für zufällige Nachricht):[/]")
                     .AllowEmpty());
+        }
+
+        public string PromptChatMessage()
+        {
+            return AnsiConsole.Prompt(
+                new TextPrompt<string>("[blue]Chat-Nachricht (leer zum Abbrechen):[/]")
+                    .AllowEmpty());
+        }
+
+        public void ShowChatSent()
+        {
+            AnsiConsole.MarkupLine("[green]Chat-Nachricht gesendet![/]");
+        }
+
+        public void ShowChatCancelled()
+        {
+            AnsiConsole.MarkupLine("[yellow]Chat abgebrochen.[/]");
         }
 
         public void ShowError(string errorMessage)

@@ -60,5 +60,10 @@ namespace DeathWorm.ViewModels
         {
             return _archipelagoService.SendDeathLink(message);
         }
+
+        public ConnectResult Say(string message)
+        {
+            return _archipelagoService.Say(message);
+        }
     }
 }

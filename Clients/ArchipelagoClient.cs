@@ -130,11 +130,31 @@ namespace DeathWorm.Clients
             }
 
             var settings = _settingsRepository.Load();
-            var deathMessage = string.IsNullOrWhiteSpace(message) 
-                ? DeathLinkMessages.GetRandomMessage() 
+            var deathMessage = string.IsNullOrWhiteSpace(message)
+                ? DeathLinkMessages.GetRandomMessage()
                 : message;
 
             _deathLinkService!.SendDeathLink(new DeathLink(sourcePlayer: settings.UserName, deathMessage));
+            return new ConnectResult(true);
+        }
+
+        public ConnectResult Say(string message)
+        {
+            if (!_isConnected)
+            {
+                return new ConnectResult(false, "Nicht verbunden. Bitte zuerst verbinden.");
+            }
+
+            try
+            {
+                _session!.Say(message);
+            }
+            catch (Exception e)
+            {
+                return new ConnectResult(false, e.GetBaseException().Message);
+            }
+
+
             return new ConnectResult(true);
         }
     }

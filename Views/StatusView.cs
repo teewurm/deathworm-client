@@ -10,7 +10,8 @@ namespace DeathWorm.Views
     {
         None,
         Back,
-        SendDeathLink
+        SendDeathLink,
+        SendChat
     }
 
     public class StatusView
@@ -49,6 +50,10 @@ namespace DeathWorm.Views
                     case StatusViewAction.SendDeathLink:
                         SendDeathLink();
                         break;
+
+                    case StatusViewAction.SendChat:
+                        SendChat();
+                        break;
                 }
             }
         }
@@ -76,6 +81,9 @@ namespace DeathWorm.Views
                                     return;
                                 case '2':
                                     action = StatusViewAction.SendDeathLink;
+                                    return;
+                                case '3':
+                                    action = StatusViewAction.SendChat;
                                     return;
                             }
                         }
@@ -113,6 +121,33 @@ namespace DeathWorm.Views
             _mainView.WaitForKeyPress();
         }
 
+        private void SendChat()
+        {
+            AnsiConsole.Clear();
+
+            var message = _mainView.PromptChatMessage();
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                _mainView.ShowChatCancelled();
+                _mainView.WaitForKeyPress();
+                return;
+            }
+
+            var result = _viewModel.Say(message);
+
+            if (result.Success)
+            {
+                _mainView.ShowChatSent();
+            }
+            else
+            {
+                _mainView.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+            }
+
+            _mainView.WaitForKeyPress();
+        }
+
         private IRenderable CreateLayout()
         {
             var connectionStatus = _archipelagoClient.IsConnected
@@ -124,7 +159,7 @@ namespace DeathWorm.Views
             layout.AddColumn(new TableColumn("").Width(50));
             layout.AddColumn(new TableColumn("").Width(50));
             layout.Title = new TableTitle($"[yellow]Status[/] | Verbindung: {connectionStatus}");
-            layout.Caption = new TableTitle("[grey][[1]][/] Zurück zum Hauptmenü  [grey][[2]][/] Death Link senden");
+            layout.Caption = new TableTitle("[grey][[1]][/] Zurück zum Hauptmenü  [grey][[2]][/] Death Link senden  [grey][[3]][/] Chat senden");
 
             layout.AddRow(CreateMessagesTable(), CreateDeathDataTable());
 
