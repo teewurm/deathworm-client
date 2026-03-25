@@ -1,34 +1,42 @@
 ﻿using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net.Packets;
+using DeathWorm.Models;
+using DeathWorm.Repositories;
 
 namespace DeathWorm.Clients
 {
     public record ConnectResult(bool Success, string? ErrorMessage = null);
 
-    internal class ArchipelagoClient
+    public class ArchipelagoClientService
     {
-        private ArchipelagoSession _session;
-        private DeathLinkService _deathLinkService;
+        private readonly SettingsRepository _settingsRepository;
 
-        private string _server;
-        private int _port;
-        private string _userName;
-        private string _gameName;
+        private ArchipelagoSession? _session;
+        private DeathLinkService? _deathLinkService;
 
         private bool _isConnected;
         public bool IsConnected => _isConnected;
 
         public event Action<string>? OnPacketReceived;
 
-        public ArchipelagoClient(string server, int port, string userName, string gameName)
+        public ArchipelagoClientService(SettingsRepository settingsRepository)
         {
-            _server = server;
-            _port = port;
-            _userName = userName;
-            _gameName = gameName;
+            _settingsRepository = settingsRepository;
+        }
 
-            _session = ArchipelagoSessionFactory.CreateSession(_server, _port);
+        private void InitializeSession(AppSettings settings)
+        {
+            // Cleanup old session if exists
+            if (_session?.Socket != null)
+            {
+                _session.Socket.PacketReceived -= HandlePacketReceived;
+                _session.Socket.ErrorReceived -= OnErrorReceived;
+                _session.Socket.SocketClosed -= OnSocketClosed;
+            }
+
+            _session = ArchipelagoSessionFactory.CreateSession(settings.Server, settings.Port);
 
             _session.Socket.PacketReceived += HandlePacketReceived;
             _session.Socket.ErrorReceived += OnErrorReceived;
@@ -49,12 +57,6 @@ namespace DeathWorm.Clients
             OnPacketReceived?.Invoke($"Socket closed: {reason}");
         }
 
-        ~ArchipelagoClient()
-        {
-            if (_session?.Socket != null)
-                _session.Socket.PacketReceived -= HandlePacketReceived;
-        }
-
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
         {
             OnPacketReceived?.Invoke($"Packet received: {packet.PacketType}");
@@ -62,11 +64,14 @@ namespace DeathWorm.Clients
 
         public ConnectResult Connect()
         {
+            var settings = _settingsRepository.Load();
+            InitializeSession(settings);
+
             LoginResult result;
 
             try
             {
-                result = _session.TryConnectAndLogin(_gameName, _userName, ItemsHandlingFlags.AllItems,
+                result = _session!.TryConnectAndLogin(settings.GameName, settings.UserName, ItemsHandlingFlags.AllItems,
                     version: new Version(0, 6, 6),
                     tags: ["DeathLink"]);
             }
@@ -78,7 +83,7 @@ namespace DeathWorm.Clients
             if (!result.Successful)
             {
                 LoginFailure failure = (LoginFailure)result;
-                string errorMessage = $"Failed to Connect to {_server} as {_userName}:";
+                string errorMessage = $"Failed to Connect to {settings.Server} as {settings.UserName}:";
                 foreach (string error in failure.Errors)
                 {
                     errorMessage += $"\n    {error}";
@@ -91,7 +96,7 @@ namespace DeathWorm.Clients
                 return new ConnectResult(false, errorMessage);
             }
 
-            _deathLinkService.EnableDeathLink();
+            _deathLinkService!.EnableDeathLink();
             _isConnected = true;
 
             return new ConnectResult(true);
@@ -110,7 +115,8 @@ namespace DeathWorm.Clients
                 OnPacketReceived?.Invoke("Reconnected successfully");
             }
 
-            _deathLinkService.SendDeathLink(new DeathLink(sourcePlayer: _userName, "Fabi ist schuld"));
+            var settings = _settingsRepository.Load();
+            _deathLinkService!.SendDeathLink(new DeathLink(sourcePlayer: settings.UserName, "Fabi ist schuld"));
         }
     }
 }

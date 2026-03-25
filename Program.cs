@@ -1,4 +1,5 @@
-﻿using DeathWorm.Repositories;
+﻿using DeathWorm.Clients;
+using DeathWorm.Repositories;
 using DeathWorm.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,6 +19,7 @@ namespace DeathWorm
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<SettingsRepository>();
+                    services.AddSingleton<ArchipelagoClientService>();
                     services.AddHostedService<MainService>();
                 })
                 .Build();
