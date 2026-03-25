@@ -2,10 +2,10 @@
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Packets;
+using DeathWorm.Extensions;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
 using DeathWorm.Services;
-using DeathWorm.Utils;
 
 namespace DeathWorm.Clients
 {
@@ -69,16 +69,12 @@ namespace DeathWorm.Clients
         }
 
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
-        {            
+        {
+            _messageService.AddMessage(packet);
 
-            if (packet is BouncedPacket bouncedPacket && bouncedPacket.Tags.Contains("DeathLink") && WormDeathLink.TryParse(bouncedPacket.Data, out var deathLink))
+            if (packet.TryGetDeathLink(out var deathLink))
             {
                 _deathDataService.AddDeath(deathLink.Source, deathLink.Timestamp);
-                _messageService.AddMessage($"[red]DeathLink von {deathLink.Source}[/] [blue]{deathLink.Cause}[/]");
-            }
-            else
-            {
-                _messageService.AddMessage("[yellow]Das ist ein Test[/]");
             }
         }
 

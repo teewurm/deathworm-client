@@ -1,3 +1,8 @@
+using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net.Packets;
+using DeathWorm.Extensions;
+using Spectre.Console;
+
 namespace DeathWorm.Services
 {
     public record Message(DateTime Timestamp, string Text);
@@ -15,6 +20,77 @@ namespace DeathWorm.Services
                 _messages.Add(new Message(DateTime.Now, text));
                 if (_messages.Count > MaxMessages)
                     _messages.RemoveAt(0);
+            }
+        }
+
+        public void AddMessage(ArchipelagoPacketBase packet)
+        {
+            if (packet.TryGetDeathLink(out var deathLink))
+            {
+                AddMessage($"[red]DeathLink von {Markup.Escape(deathLink.Source)}[/] [blue]{Markup.Escape(deathLink.Cause ?? "")}[/]");
+                return;
+            }
+
+            switch (packet)
+            {
+                case ConnectedPacket connectedPacket:
+                    AddMessage($"[green]Verbunden mit Slot {connectedPacket.Slot}[/]");
+                    break;
+
+                case RoomUpdatePacket roomUpdatePacket:
+                    if (roomUpdatePacket.Players != null && roomUpdatePacket.Players.Length > 0)
+                    {
+                        AddMessage($"[yellow]Raum aktualisiert - {roomUpdatePacket.Players.Length} Spieler[/]");
+                    }
+                    break;
+
+                case PrintJsonPacket printJsonPacket:
+                    var text = string.Join("", printJsonPacket.Data.Select(d => d.Text));
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        AddMessage($"[white]{Markup.Escape(text)}[/]");
+                    }
+                    break;
+
+                case ReceivedItemsPacket receivedItemsPacket:
+                    AddMessage($"[cyan]Items erhalten: {receivedItemsPacket.Items.Length} Item(s)[/]");
+                    break;
+
+                case LocationInfoPacket locationInfoPacket:
+                    AddMessage($"[magenta]Location Info: {locationInfoPacket.Locations.Length} Location(s)[/]");
+                    break;
+
+                case DataPackagePacket:
+                    AddMessage("[grey]Datenpaket empfangen[/]");
+                    break;
+
+                case RoomInfoPacket roomInfoPacket:
+                    AddMessage($"[yellow]Raum Info - Seed: {Markup.Escape(roomInfoPacket.SeedName ?? "")}[/]");
+                    break;
+
+                case BouncedPacket bouncedPacket:
+                    var tags = string.Join(", ", bouncedPacket.Tags.Select(t => Markup.Escape(t)));
+                    AddMessage($"[blue]Bounced Packet - Tags: {tags}[/]");
+                    break;
+
+                case InvalidPacketPacket invalidPacket:
+                    AddMessage($"[red]Ungültiges Packet: {Markup.Escape(invalidPacket.ErrorText ?? "")}[/]");
+                    break;
+
+                case ConnectionRefusedPacket connectionRefusedPacket:
+                    var errors = string.Join(", ", connectionRefusedPacket.Errors.Select(e => Markup.Escape(e.ToString())));
+                    AddMessage($"[red]Verbindung abgelehnt: {errors}[/]");
+                    break;
+
+                // Ignorierte Packets (zu häufig oder unwichtig)
+                case RetrievedPacket:
+                case SetReplyPacket:
+                    break;
+
+                default:
+                    // Unbekannte Packets optional loggen
+                    AddMessage($"[grey]Packet: {packet.PacketType}[/]");
+                    break;
             }
         }
 
