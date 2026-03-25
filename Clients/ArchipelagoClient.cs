@@ -1,5 +1,4 @@
 ﻿using Archipelago.MultiClient.Net;
-using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Packets;

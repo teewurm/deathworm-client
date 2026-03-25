@@ -1,27 +1,62 @@
 using DeathWorm.Services;
 using DeathWorm.Clients;
-using DeathWorm.Services;
+using DeathWorm.ViewModels;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
 namespace DeathWorm.Views
 {
+    public enum StatusViewAction
+    {
+        None,
+        Back,
+        SendDeathLink
+    }
+
     public class StatusView
     {
         private readonly MessageService _messageService;
         private readonly DeathDataService _deathDataService;
         private readonly ArchipelagoClientService _archipelagoClient;
+        private readonly MainView _mainView;
+        private readonly MainViewModel _viewModel;
 
-        public StatusView(MessageService messageService, DeathDataService deathDataService, ArchipelagoClientService archipelagoClient)
+        public StatusView(
+            MessageService messageService, 
+            DeathDataService deathDataService, 
+            ArchipelagoClientService archipelagoClient,
+            MainView mainView,
+            MainViewModel viewModel)
         {
             _messageService = messageService;
             _deathDataService = deathDataService;
             _archipelagoClient = archipelagoClient;
+            _mainView = mainView;
+            _viewModel = viewModel;
         }
 
         public void Show(CancellationToken cancellationToken)
         {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var action = ShowLiveStatus(cancellationToken);
+
+                switch (action)
+                {
+                    case StatusViewAction.Back:
+                        return;
+
+                    case StatusViewAction.SendDeathLink:
+                        SendDeathLink();
+                        break;
+                }
+            }
+        }
+
+        private StatusViewAction ShowLiveStatus(CancellationToken cancellationToken)
+        {
             AnsiConsole.Clear();
+            var action = StatusViewAction.None;
 
             AnsiConsole.Live(CreateLayout())
                 .Start(ctx =>
@@ -34,15 +69,48 @@ namespace DeathWorm.Views
                         if (Console.KeyAvailable)
                         {
                             var key = Console.ReadKey(true);
-                            if (key.KeyChar == '1')
+                            switch (key.KeyChar)
                             {
-                                return;
+                                case '1':
+                                    action = StatusViewAction.Back;
+                                    return;
+                                case '2':
+                                    action = StatusViewAction.SendDeathLink;
+                                    return;
                             }
                         }
 
                         Thread.Sleep(500);
                     }
                 });
+
+            return action;
+        }
+
+        private void SendDeathLink()
+        {
+            AnsiConsole.Clear();
+
+            if (!_mainView.ConfirmDeathLink())
+            {
+                _mainView.ShowDeathLinkCancelled();
+                _mainView.WaitForKeyPress();
+                return;
+            }
+
+            var message = _mainView.PromptDeathLinkMessage();
+            var result = _viewModel.SendDeathLink(message);
+
+            if (result.Success)
+            {
+                _mainView.ShowDeathLinkSent();
+            }
+            else
+            {
+                _mainView.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+            }
+
+            _mainView.WaitForKeyPress();
         }
 
         private IRenderable CreateLayout()
@@ -56,7 +124,7 @@ namespace DeathWorm.Views
             layout.AddColumn(new TableColumn("").Width(50));
             layout.AddColumn(new TableColumn("").Width(50));
             layout.Title = new TableTitle($"[yellow]Status[/] | Verbindung: {connectionStatus}");
-            layout.Caption = new TableTitle("[grey][[1]][/] Zurück zum Hauptmenü");
+            layout.Caption = new TableTitle("[grey][[1]][/] Zurück zum Hauptmenü  [grey][[2]][/] Death Link senden");
 
             layout.AddRow(CreateMessagesTable(), CreateDeathDataTable());
 
