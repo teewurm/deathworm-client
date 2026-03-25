@@ -9,13 +9,13 @@ namespace DeathWorm.Services
         private readonly IHostApplicationLifetime _lifetime;
         private readonly MainViewModel _viewModel;
         private readonly MainView _view;
-        private readonly MessagesView _messagesView;
+        private readonly StatusView _messagesView;
 
         public MainService(
             IHostApplicationLifetime lifetime,
             MainViewModel viewModel,
             MainView view,
-            MessagesView messagesView)
+            StatusView messagesView)
         {
             _lifetime = lifetime;
             _viewModel = viewModel;

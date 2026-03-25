@@ -32,7 +32,7 @@ namespace DeathWorm
                     // MVVM
                     services.AddSingleton<MainViewModel>();
                     services.AddSingleton<MainView>();
-                    services.AddSingleton<MessagesView>();
+                    services.AddSingleton<StatusView>();
 
                     services.AddHostedService<MainService>();
                 })

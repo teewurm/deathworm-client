@@ -1,16 +1,15 @@
 using DeathWorm.Services;
 using DeathWorm.Clients;
-using DeathWorm.Services;
 using Spectre.Console;
 
 namespace DeathWorm.Views
 {
-    public class MessagesView
+    public class StatusView
     {
         private readonly MessageService _messageService;
         private readonly ArchipelagoClientService _archipelagoClient;
 
-        public MessagesView(MessageService messageService, ArchipelagoClientService archipelagoClient)
+        public StatusView(MessageService messageService, ArchipelagoClientService archipelagoClient)
         {
             _messageService = messageService;
             _archipelagoClient = archipelagoClient;
