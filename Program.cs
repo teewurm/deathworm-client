@@ -20,8 +20,9 @@ namespace DeathWorm
                 {
                     services.AddSingleton<SettingsRepository>();
                     services.AddSingleton<DeathDataRepository>();
-                    services.AddSingleton<ArchipelagoClientService>();
+                    services.AddSingleton<MessageService>();
                     services.AddSingleton<DeathDataService>();
+                    services.AddSingleton<ArchipelagoClientService>();
                     services.AddHostedService<MainService>();
                 })
                 .Build();

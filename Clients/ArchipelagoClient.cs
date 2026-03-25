@@ -15,6 +15,7 @@ namespace DeathWorm.Clients
     {
         private readonly SettingsRepository _settingsRepository;
         private readonly DeathDataService _deathDataService;
+        private readonly MessageService _messageService;
 
         private ArchipelagoSession? _session;
         private DeathLinkService? _deathLinkService;
@@ -22,10 +23,11 @@ namespace DeathWorm.Clients
         private bool _isConnected;
         public bool IsConnected => _isConnected;
 
-        public ArchipelagoClientService(SettingsRepository settingsRepository, DeathDataService deathDataService)
+        public ArchipelagoClientService(SettingsRepository settingsRepository, DeathDataService deathDataService, MessageService messageService)
         {
             _settingsRepository = settingsRepository;
             _deathDataService = deathDataService;
+            _messageService = messageService;
         }
 
         private void InitializeSession(AppSettings settings)
@@ -71,6 +73,7 @@ namespace DeathWorm.Clients
             if (packet is BouncedPacket bouncedPacket && bouncedPacket.Tags.Contains("DeathLink") && WormDeathLink.TryParse(bouncedPacket.Data, out var deathLink))
             {
                 _deathDataService.AddDeath(deathLink.Source, deathLink.Timestamp);
+                _messageService.AddMessage($"[grey]{DateTime.Now:HH:mm:ss}[/] [red]DeathLink von {deathLink.Source}[/]");
             }
         }
 

@@ -12,19 +12,20 @@ namespace DeathWorm.Services
         private readonly IHostApplicationLifetime _lifetime;
         private readonly SettingsRepository _settingsRepository;
         private readonly ArchipelagoClientService _archipelagoService;
-        private readonly List<string> _packetLog = new();
-        private readonly object _logLock = new();
+        private readonly MessageService _messageService;
 
         private AppSettings _settings;
 
         public MainService(
             IHostApplicationLifetime lifetime, 
             SettingsRepository settingsRepository,
-            ArchipelagoClientService archipelagoService)
+            ArchipelagoClientService archipelagoService,
+            MessageService messageService)
         {
             _lifetime = lifetime;
             _settingsRepository = settingsRepository;
             _archipelagoService = archipelagoService;
+            _messageService = messageService;
             _settings = _settingsRepository.Load();
         }
 
@@ -45,15 +46,13 @@ namespace DeathWorm.Services
 
         private void ShowPacketLog()
         {
-            lock (_logLock)
+            var messages = _messageService.GetMessages();
+            if (messages.Count > 0)
             {
-                if (_packetLog.Count > 0)
+                AnsiConsole.MarkupLine("\n[yellow]Letzte Nachrichten:[/]");
+                foreach (var message in messages)
                 {
-                    AnsiConsole.MarkupLine("\n[yellow]Letzte Pakete:[/]");
-                    foreach (var log in _packetLog)
-                    {
-                        AnsiConsole.MarkupLine(log);
-                    }
+                    AnsiConsole.MarkupLine(message);
                 }
             }
         }
