@@ -1,3 +1,4 @@
+using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using DeathWorm.Views;
 using Microsoft.Extensions.Hosting;
@@ -50,25 +51,25 @@ namespace DeathWorm.Services
 
                 switch (choice)
                 {
-                    case "Einstellungen bearbeiten":
+                    case MenuChoices.EditSettings:
                         EditSettings();
                         break;
 
-                    case "Verbinden":
+                    case MenuChoices.Connect:
                         Connect();
                         _view.WaitForKeyPress();
                         break;
 
-                    case "Nachrichten anzeigen":
+                    case MenuChoices.ShowMessages:
                         _messagesView.Show(cancellationToken);
                         break;
 
-                    case "Death Link senden":
+                    case MenuChoices.SendDeathLink:
                         SendDeathLink();
                         _view.WaitForKeyPress();
                         break;
 
-                    case "Beenden":
+                    case MenuChoices.Exit:
                         _lifetime.StopApplication();
                         return;
                 }
@@ -81,27 +82,27 @@ namespace DeathWorm.Services
 
             switch (settingChoice)
             {
-                case "Server":
+                case MenuChoices.Server:
                     var server = _view.PromptString("Server", _viewModel.Settings.Server);
                     _viewModel.UpdateServer(server);
                     break;
 
-                case "Port":
+                case MenuChoices.Port:
                     var port = _view.PromptInt("Port", _viewModel.Settings.Port);
                     _viewModel.UpdatePort(port);
                     break;
 
-                case "Benutzername":
+                case MenuChoices.UserName:
                     var userName = _view.PromptString("Benutzername", _viewModel.Settings.UserName);
                     _viewModel.UpdateUserName(userName);
                     break;
 
-                case "Spielname":
+                case MenuChoices.GameName:
                     var gameName = _view.PromptString("Spielname", _viewModel.Settings.GameName);
                     _viewModel.UpdateGameName(gameName);
                     break;
 
-                case "Zurück":
+                case MenuChoices.Back:
                     break;
             }
         }

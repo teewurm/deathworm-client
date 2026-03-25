@@ -1,3 +1,4 @@
+using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using Spectre.Console;
 
@@ -42,11 +43,11 @@ namespace DeathWorm.Views
                 new SelectionPrompt<string>()
                     .Title("[green]Hauptmenü[/]")
                     .AddChoices(
-                        "Einstellungen bearbeiten",
-                        "Verbinden",
-                        "Nachrichten anzeigen",
-                        "Death Link senden",
-                        "Beenden"));
+                        MenuChoices.EditSettings,
+                        MenuChoices.Connect,
+                        MenuChoices.ShowMessages,
+                        MenuChoices.SendDeathLink,
+                        MenuChoices.Exit));
         }
 
         public string ShowSettingsMenu()
@@ -55,11 +56,11 @@ namespace DeathWorm.Views
                 new SelectionPrompt<string>()
                     .Title("[yellow]Welche Einstellung möchtest du ändern?[/]")
                     .AddChoices(
-                        "Server",
-                        "Port",
-                        "Benutzername",
-                        "Spielname",
-                        "Zurück"));
+                        MenuChoices.Server,
+                        MenuChoices.Port,
+                        MenuChoices.UserName,
+                        MenuChoices.GameName,
+                        MenuChoices.Back));
         }
 
         public string PromptString(string label, string defaultValue)
