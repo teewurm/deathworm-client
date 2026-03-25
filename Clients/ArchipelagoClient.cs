@@ -117,6 +117,13 @@ namespace DeathWorm.Clients
             }
 
             _deathLinkService!.EnableDeathLink();
+
+            // Alle Spieler in der DeathData anlegen
+            var playerNames = _session.Players.AllPlayers
+                .Where(p => !string.IsNullOrWhiteSpace(p.Name) && p.Name != "Server")
+                .Select(p => p.Name);
+            _deathDataService.EnsurePlayersExist(playerNames);
+
             _isConnected = true;
 
             return new ConnectResult(true);

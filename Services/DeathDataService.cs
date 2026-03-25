@@ -65,5 +65,29 @@ namespace DeathWorm.Services
                 return _cachedDeathData.Sum(d => d.Timestamps.Count);
             }
         }
+
+        public void EnsurePlayersExist(IEnumerable<string> playerNames)
+        {
+            lock (_cacheLock)
+            {
+                foreach (var playerName in playerNames)
+                {
+                    if (string.IsNullOrWhiteSpace(playerName))
+                        continue;
+
+                    var existingPlayer = _cachedDeathData.FirstOrDefault(d => d.PlayerName == playerName);
+                    if (existingPlayer == null)
+                    {
+                        var newPlayer = new DeathData
+                        {
+                            PlayerName = playerName,
+                            Timestamps = []
+                        };
+                        _cachedDeathData.Add(newPlayer);
+                        _deathDataRepository.EnsurePlayerExists(playerName);
+                    }
+                }
+            }
+        }
     }
 }

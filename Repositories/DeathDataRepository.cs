@@ -76,5 +76,24 @@ namespace DeathWorm.Repositories
             var json = JsonSerializer.Serialize(deathData, _jsonOptions);
             File.WriteAllText(_dataFilePath, json);
         }
+
+        public void EnsurePlayerExists(string playerName)
+        {
+            lock (_fileLock)
+            {
+                var allDeathData = Load();
+
+                var existingPlayer = allDeathData.FirstOrDefault(d => d.PlayerName == playerName);
+                if (existingPlayer == null)
+                {
+                    allDeathData.Add(new DeathData
+                    {
+                        PlayerName = playerName,
+                        Timestamps = []
+                    });
+                    Save(allDeathData);
+                }
+            }
+        }
     }
 }
