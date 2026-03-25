@@ -60,7 +60,7 @@ namespace DeathWorm.Services
                         _view.WaitForKeyPress();
                         break;
 
-                    case MenuChoices.ShowMessages:
+                    case MenuChoices.ShowStatus:
                         _messagesView.Show(cancellationToken);
                         break;
 

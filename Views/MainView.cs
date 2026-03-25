@@ -39,15 +39,24 @@ namespace DeathWorm.Views
 
         public string ShowMainMenu()
         {
+            var choices = new List<string>
+            {
+                MenuChoices.EditSettings,
+                MenuChoices.Connect
+            };
+
+            if (_viewModel.IsConnected)
+            {
+                choices.Add(MenuChoices.ShowStatus);
+                choices.Add(MenuChoices.SendDeathLink);
+            }
+
+            choices.Add(MenuChoices.Exit);
+
             return AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("[green]Hauptmenü[/]")
-                    .AddChoices(
-                        MenuChoices.EditSettings,
-                        MenuChoices.Connect,
-                        MenuChoices.ShowMessages,
-                        MenuChoices.SendDeathLink,
-                        MenuChoices.Exit));
+                    .AddChoices(choices));
         }
 
         public string ShowSettingsMenu()

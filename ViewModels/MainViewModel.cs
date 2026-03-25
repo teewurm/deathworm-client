@@ -1,4 +1,5 @@
 using DeathWorm.Clients;
+using DeathWorm.Clients;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
 
@@ -10,6 +11,7 @@ namespace DeathWorm.ViewModels
         private readonly ArchipelagoClientService _archipelagoService;
 
         public AppSettings Settings { get; private set; }
+        public bool IsConnected => _archipelagoService.IsConnected;
 
         public MainViewModel(
             SettingsRepository settingsRepository,

@@ -11,7 +11,7 @@
         // Hauptmenü
         public const string EditSettings = "Einstellungen bearbeiten";
         public const string Connect = "Verbinden";
-        public const string ShowMessages = "Status anzeigen";
+        public const string ShowStatus = "Status anzeigen";
         public const string SendDeathLink = "Death Link senden";
         public const string Exit = "Beenden";
 
