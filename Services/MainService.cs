@@ -1,6 +1,4 @@
-using DeathWorm.Clients;
-using DeathWorm.Models;
-using DeathWorm.Repositories;
+using DeathWorm.ViewModels;
 using DeathWorm.Views;
 using Microsoft.Extensions.Hosting;
 
@@ -9,26 +7,20 @@ namespace DeathWorm.Services
     public class MainService : IHostedService
     {
         private readonly IHostApplicationLifetime _lifetime;
-        private readonly SettingsRepository _settingsRepository;
-        private readonly ArchipelagoClientService _archipelagoService;
-        private readonly MessageService _messageService;
+        private readonly MainViewModel _viewModel;
         private readonly MainView _view;
-
-        private AppSettings _settings;
+        private readonly MessagesView _messagesView;
 
         public MainService(
-            IHostApplicationLifetime lifetime, 
-            SettingsRepository settingsRepository,
-            ArchipelagoClientService archipelagoService,
-            MessageService messageService,
-            MainView view)
+            IHostApplicationLifetime lifetime,
+            MainViewModel viewModel,
+            MainView view,
+            MessagesView messagesView)
         {
             _lifetime = lifetime;
-            _settingsRepository = settingsRepository;
-            _archipelagoService = archipelagoService;
-            _messageService = messageService;
+            _viewModel = viewModel;
             _view = view;
-            _settings = _settingsRepository.Load();
+            _messagesView = messagesView;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -52,16 +44,12 @@ namespace DeathWorm.Services
             {
                 _view.Clear();
                 _view.ShowHeader();
-                _view.ShowSettings(_settings);
-                _view.ShowMessages(_messageService.GetMessages());
+                _view.ShowSettings();
 
                 var choice = _view.ShowMainMenu();
 
                 switch (choice)
                 {
-                    case "Aktualisieren":
-                        break;
-
                     case "Einstellungen bearbeiten":
                         EditSettings();
                         break;
@@ -69,6 +57,10 @@ namespace DeathWorm.Services
                     case "Verbinden":
                         Connect();
                         _view.WaitForKeyPress();
+                        break;
+
+                    case "Nachrichten anzeigen":
+                        _messagesView.Show(cancellationToken);
                         break;
 
                     case "Death Link senden":
@@ -90,23 +82,23 @@ namespace DeathWorm.Services
             switch (settingChoice)
             {
                 case "Server":
-                    _settings.Server = _view.PromptString("Server", _settings.Server);
-                    _settingsRepository.Save(_settings);
+                    var server = _view.PromptString("Server", _viewModel.Settings.Server);
+                    _viewModel.UpdateServer(server);
                     break;
 
                 case "Port":
-                    _settings.Port = _view.PromptInt("Port", _settings.Port);
-                    _settingsRepository.Save(_settings);
+                    var port = _view.PromptInt("Port", _viewModel.Settings.Port);
+                    _viewModel.UpdatePort(port);
                     break;
 
                 case "Benutzername":
-                    _settings.UserName = _view.PromptString("Benutzername", _settings.UserName);
-                    _settingsRepository.Save(_settings);
+                    var userName = _view.PromptString("Benutzername", _viewModel.Settings.UserName);
+                    _viewModel.UpdateUserName(userName);
                     break;
 
                 case "Spielname":
-                    _settings.GameName = _view.PromptString("Spielname", _settings.GameName);
-                    _settingsRepository.Save(_settings);
+                    var gameName = _view.PromptString("Spielname", _viewModel.Settings.GameName);
+                    _viewModel.UpdateGameName(gameName);
                     break;
 
                 case "Zurück":
@@ -116,10 +108,9 @@ namespace DeathWorm.Services
 
         private void Connect()
         {
-            _settings = _settingsRepository.Load();
-            _view.ShowConnecting(_settings.Server, _settings.Port);
+            _view.ShowConnecting();
 
-            var result = _archipelagoService.Connect();
+            var result = _viewModel.Connect();
 
             if (result.Success)
             {
@@ -133,7 +124,7 @@ namespace DeathWorm.Services
 
         private void SendDeathLink()
         {
-            var result = _archipelagoService.SendDeathLink();
+            var result = _viewModel.SendDeathLink();
 
             if (result.Success)
             {

@@ -69,11 +69,16 @@ namespace DeathWorm.Clients
         }
 
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
-        {
+        {            
+
             if (packet is BouncedPacket bouncedPacket && bouncedPacket.Tags.Contains("DeathLink") && WormDeathLink.TryParse(bouncedPacket.Data, out var deathLink))
             {
                 _deathDataService.AddDeath(deathLink.Source, deathLink.Timestamp);
-                _messageService.AddMessage($"[grey]{DateTime.Now:HH:mm:ss}[/] [red]DeathLink von {deathLink.Source}[/] [blue]{deathLink.Cause}[/]");
+                _messageService.AddMessage($"[red]DeathLink von {deathLink.Source}[/] [blue]{deathLink.Cause}[/]");
+            }
+            else
+            {
+                _messageService.AddMessage("[yellow]Das ist ein Test[/]");
             }
         }
 

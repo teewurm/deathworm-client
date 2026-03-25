@@ -1,6 +1,7 @@
 ﻿using DeathWorm.Clients;
 using DeathWorm.Repositories;
 using DeathWorm.Services;
+using DeathWorm.ViewModels;
 using DeathWorm.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,12 +20,20 @@ namespace DeathWorm
                 })
                 .ConfigureServices(services =>
                 {
+                    // Repositories
                     services.AddSingleton<SettingsRepository>();
                     services.AddSingleton<DeathDataRepository>();
+
+                    // Services
                     services.AddSingleton<MessageService>();
                     services.AddSingleton<DeathDataService>();
                     services.AddSingleton<ArchipelagoClientService>();
+
+                    // MVVM
+                    services.AddSingleton<MainViewModel>();
                     services.AddSingleton<MainView>();
+                    services.AddSingleton<MessagesView>();
+
                     services.AddHostedService<MainService>();
                 })
                 .Build();

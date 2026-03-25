@@ -1,10 +1,17 @@
-using DeathWorm.Models;
+using DeathWorm.ViewModels;
 using Spectre.Console;
 
 namespace DeathWorm.Views
 {
     public class MainView
     {
+        private readonly MainViewModel _viewModel;
+
+        public MainView(MainViewModel viewModel)
+        {
+            _viewModel = viewModel;
+        }
+
         public void Clear()
         {
             AnsiConsole.Clear();
@@ -15,30 +22,18 @@ namespace DeathWorm.Views
             AnsiConsole.Write(new FigletText("DeathWorm").Color(Color.Red));
         }
 
-        public void ShowSettings(AppSettings settings)
+        public void ShowSettings()
         {
             var table = new Table();
             table.AddColumn("Einstellung");
             table.AddColumn("Wert");
 
-            table.AddRow("Server", settings.Server);
-            table.AddRow("Port", settings.Port.ToString());
-            table.AddRow("Benutzername", settings.UserName);
-            table.AddRow("Spielname", settings.GameName);
+            table.AddRow("Server", _viewModel.Settings.Server);
+            table.AddRow("Port", _viewModel.Settings.Port.ToString());
+            table.AddRow("Benutzername", _viewModel.Settings.UserName);
+            table.AddRow("Spielname", _viewModel.Settings.GameName);
 
             AnsiConsole.Write(table);
-        }
-
-        public void ShowMessages(List<string> messages)
-        {
-            if (messages.Count > 0)
-            {
-                AnsiConsole.MarkupLine("\n[yellow]Letzte Nachrichten:[/]");
-                foreach (var message in messages)
-                {
-                    AnsiConsole.MarkupLine(message);
-                }
-            }
         }
 
         public string ShowMainMenu()
@@ -47,9 +42,9 @@ namespace DeathWorm.Views
                 new SelectionPrompt<string>()
                     .Title("[green]Hauptmenü[/]")
                     .AddChoices(
-                        "Aktualisieren",
                         "Einstellungen bearbeiten",
                         "Verbinden",
+                        "Nachrichten anzeigen",
                         "Death Link senden",
                         "Beenden"));
         }
@@ -81,9 +76,9 @@ namespace DeathWorm.Views
                     .DefaultValue(defaultValue));
         }
 
-        public void ShowConnecting(string server, int port)
+        public void ShowConnecting()
         {
-            AnsiConsole.MarkupLine($"[yellow]Verbinde mit {server}:{port}...[/]");
+            AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_viewModel.Settings.Server}:{_viewModel.Settings.Port}...[/]");
         }
 
         public void ShowConnectionSuccess()
