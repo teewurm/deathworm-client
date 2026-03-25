@@ -124,6 +124,15 @@ namespace DeathWorm.Clients
                 .Select(p => p.Name);
             _deathDataService.EnsurePlayersExist(playerNames);
 
+            try
+            {
+                _session.SetGoalAchieved();
+            }
+            catch
+            {
+                return new ConnectResult(false, "Failed to mark goal as achieved.");
+            }
+
             _isConnected = true;
 
             return new ConnectResult(true);
