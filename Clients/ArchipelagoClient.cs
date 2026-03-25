@@ -28,13 +28,7 @@ namespace DeathWorm.Clients
 
         private void InitializeSession(AppSettings settings)
         {
-            // Cleanup old session if exists
-            if (_session?.Socket != null)
-            {
-                _session.Socket.PacketReceived -= HandlePacketReceived;
-                _session.Socket.ErrorReceived -= OnErrorReceived;
-                _session.Socket.SocketClosed -= OnSocketClosed;
-            }
+            CleanUpSession();
 
             _session = ArchipelagoSessionFactory.CreateSession(settings.Server, settings.Port);
 
@@ -45,16 +39,29 @@ namespace DeathWorm.Clients
             _deathLinkService = _session.CreateDeathLinkService();
         }
 
+        private void CleanUpSession()
+        {
+            // Cleanup old session if exists
+            if (_session?.Socket != null)
+            {
+                _session.Socket.PacketReceived -= HandlePacketReceived;
+                _session.Socket.ErrorReceived -= OnErrorReceived;
+                _session.Socket.SocketClosed -= OnSocketClosed;
+            }
+
+            _session = null;
+        }
+
         private void OnErrorReceived(Exception e, string message)
         {
             _isConnected = false;
-            OnPacketReceived?.Invoke($"Error: {message}");
+            CleanUpSession();
         }
 
         private void OnSocketClosed(string reason)
         {
             _isConnected = false;
-            OnPacketReceived?.Invoke($"Socket closed: {reason}");
+            CleanUpSession();
         }
 
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
@@ -64,6 +71,9 @@ namespace DeathWorm.Clients
 
         public ConnectResult Connect()
         {
+            if (IsConnected) return new ConnectResult(false, "Bereits verbunden");
+
+
             var settings = _settingsRepository.Load();
             InitializeSession(settings);
 
