@@ -11,8 +11,7 @@ namespace DeathWorm.Services
     {
         private readonly IHostApplicationLifetime _lifetime;
         private readonly SettingsRepository _settingsRepository;
-        private readonly DeathDataRepository _deathDataRepository;
-        private readonly ArchipelagoClientService _archipelagoClient;
+        private readonly ArchipelagoClientService _archipelagoService;
         private readonly List<string> _packetLog = new();
         private readonly object _logLock = new();
 
@@ -21,16 +20,12 @@ namespace DeathWorm.Services
         public MainService(
             IHostApplicationLifetime lifetime, 
             SettingsRepository settingsRepository,
-            DeathDataRepository deathDataRepository,
-            ArchipelagoClientService archipelagoClient)
+            ArchipelagoClientService archipelagoService)
         {
             _lifetime = lifetime;
             _settingsRepository = settingsRepository;
-            _deathDataRepository = deathDataRepository;
-            _archipelagoClient = archipelagoClient;
+            _archipelagoService = archipelagoService;
             _settings = _settingsRepository.Load();
-
-            _archipelagoClient.OnDeathLinkReceived += OnDeathLinkReceived;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -46,18 +41,6 @@ namespace DeathWorm.Services
         public Task StopAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
-        }
-
-        private void OnDeathLinkReceived(WormDeathLink deathLink)
-        {
-            _deathDataRepository.AddDeath(deathLink.Source, deathLink.Timestamp);
-
-            lock (_logLock)
-            {
-                _packetLog.Add($"[grey]{DateTime.Now:HH:mm:ss}[/] [red]DeathLink von {deathLink.Source}[/]");
-                if (_packetLog.Count > 5)
-                    _packetLog.RemoveAt(0);
-            }
         }
 
         private void ShowPacketLog()
@@ -84,7 +67,7 @@ namespace DeathWorm.Services
                 ShowCurrentSettings();
                 ShowPacketLog();
 
-                var connectionStatus = _archipelagoClient.IsConnected
+                var connectionStatus = _archipelagoService.IsConnected
                     ? "[green](Verbunden)[/]"
                     : "[red](Nicht verbunden)[/]";
 
@@ -115,8 +98,15 @@ namespace DeathWorm.Services
                         break;
 
                     case "Death Link senden":
-                        _archipelagoClient.SendDeathLink();
-                        AnsiConsole.MarkupLine("[green]Death Link gesendet![/]");
+                        var sendResult = _archipelagoService.SendDeathLink();
+                        if (sendResult.Success)
+                        {
+                            AnsiConsole.MarkupLine("[green]Death Link gesendet![/]");
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine($"[red]{Markup.Escape(sendResult.ErrorMessage ?? "Unbekannter Fehler")}[/]");
+                        }
                         AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
                         Console.ReadKey(true);
                         break;
@@ -194,7 +184,7 @@ namespace DeathWorm.Services
             _settings = _settingsRepository.Load();
             AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_settings.Server}:{_settings.Port}...[/]");
 
-            var result = _archipelagoClient.Connect();
+            var result = _archipelagoService.Connect();
 
             if (result.Success)
             {

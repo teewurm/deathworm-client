@@ -4,6 +4,7 @@ using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Packets;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
+using DeathWorm.Services;
 using DeathWorm.Utils;
 
 namespace DeathWorm.Clients
@@ -13,6 +14,7 @@ namespace DeathWorm.Clients
     public class ArchipelagoClientService
     {
         private readonly SettingsRepository _settingsRepository;
+        private readonly DeathDataService _deathDataService;
 
         private ArchipelagoSession? _session;
         private DeathLinkService? _deathLinkService;
@@ -20,12 +22,10 @@ namespace DeathWorm.Clients
         private bool _isConnected;
         public bool IsConnected => _isConnected;
 
-        //public event Action<string>? OnPacketReceived;
-        public event Action<WormDeathLink>? OnDeathLinkReceived;
-
-        public ArchipelagoClientService(SettingsRepository settingsRepository)
+        public ArchipelagoClientService(SettingsRepository settingsRepository, DeathDataService deathDataService)
         {
             _settingsRepository = settingsRepository;
+            _deathDataService = deathDataService;
         }
 
         private void InitializeSession(AppSettings settings)
@@ -68,11 +68,9 @@ namespace DeathWorm.Clients
 
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
         {
-            //OnPacketReceived?.Invoke($"Packet received: {packet.PacketType}");
-
             if (packet is BouncedPacket bouncedPacket && bouncedPacket.Tags.Contains("DeathLink") && WormDeathLink.TryParse(bouncedPacket.Data, out var deathLink))
             {
-                OnDeathLinkReceived?.Invoke(deathLink);
+                _deathDataService.AddDeath(deathLink.Source, deathLink.Timestamp);
             }
         }
 
@@ -119,20 +117,16 @@ namespace DeathWorm.Clients
             return new ConnectResult(true);
         }
 
-        public void SendDeathLink()
+        public ConnectResult SendDeathLink()
         {
             if (!_isConnected)
             {
-                return;
+                return new ConnectResult(false, "Nicht verbunden. Bitte zuerst verbinden.");
             }
 
             var settings = _settingsRepository.Load();
             _deathLinkService!.SendDeathLink(new DeathLink(sourcePlayer: settings.UserName, "Fabi ist schuld"));
+            return new ConnectResult(true);
         }
-
-        //public bool LoadPlayerInfos(out )
-        //{
-
-        //}
     }
 }
