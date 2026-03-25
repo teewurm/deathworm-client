@@ -1,8 +1,6 @@
 ﻿using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
-using Archipelago.MultiClient.Net.Packets;
-using System.Net.Sockets;
 
 namespace DeathWorm.Clients
 {
@@ -18,6 +16,9 @@ namespace DeathWorm.Clients
         private string _userName;
         private string _gameName;
 
+        private bool _isConnected;
+        public bool IsConnected => _isConnected;
+
         public event Action<string>? OnPacketReceived;
 
         public ArchipelagoClient(string server, int port, string userName, string gameName)
@@ -30,15 +31,22 @@ namespace DeathWorm.Clients
             _session = ArchipelagoSessionFactory.CreateSession(_server, _port);
 
             _session.Socket.PacketReceived += HandlePacketReceived;
-
             _session.Socket.ErrorReceived += OnErrorReceived;
+            _session.Socket.SocketClosed += OnSocketClosed;
 
             _deathLinkService = _session.CreateDeathLinkService();
         }
 
         private void OnErrorReceived(Exception e, string message)
         {
-            Console.WriteLine(e.ToString());
+            _isConnected = false;
+            OnPacketReceived?.Invoke($"Error: {message}");
+        }
+
+        private void OnSocketClosed(string reason)
+        {
+            _isConnected = false;
+            OnPacketReceived?.Invoke($"Socket closed: {reason}");
         }
 
         ~ArchipelagoClient()
@@ -84,12 +92,24 @@ namespace DeathWorm.Clients
             }
 
             _deathLinkService.EnableDeathLink();
+            _isConnected = true;
 
             return new ConnectResult(true);
         }
 
         public void SendDeathLink()
         {
+            if (!_isConnected)
+            {
+                var result = Connect();
+                if (!result.Success)
+                {
+                    OnPacketReceived?.Invoke($"Reconnect failed: {result.ErrorMessage}");
+                    return;
+                }
+                OnPacketReceived?.Invoke("Reconnected successfully");
+            }
+
             _deathLinkService.SendDeathLink(new DeathLink(sourcePlayer: _userName, "Fabi ist schuld"));
         }
     }

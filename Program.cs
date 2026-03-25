@@ -1,4 +1,5 @@
-﻿using DeathWorm.Services;
+﻿using DeathWorm.Repositories;
+using DeathWorm.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ namespace DeathWorm
                 })
                 .ConfigureServices(services =>
                 {
+                    services.AddSingleton<SettingsRepository>();
                     services.AddHostedService<MainService>();
                 })
                 .Build();

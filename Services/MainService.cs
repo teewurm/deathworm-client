@@ -1,4 +1,6 @@
 using DeathWorm.Clients;
+using DeathWorm.Models;
+using DeathWorm.Repositories;
 using Microsoft.Extensions.Hosting;
 using Spectre.Console;
 
@@ -7,18 +9,17 @@ namespace DeathWorm.Services
     public class MainService : IHostedService
     {
         private readonly IHostApplicationLifetime _lifetime;
+        private readonly SettingsRepository _settingsRepository;
         private readonly List<string> _packetLog = new();
         private readonly object _logLock = new();
 
-        //private string _server = "archipelago.gg";
-        private string _server = "localhost";
-        private int _port = 38281;
-        private string _userName = "deathworm";
-        private string _gameName = "Deathworm";
+        private AppSettings _settings;
 
-        public MainService(IHostApplicationLifetime lifetime)
+        public MainService(IHostApplicationLifetime lifetime, SettingsRepository settingsRepository)
         {
             _lifetime = lifetime;
+            _settingsRepository = settingsRepository;
+            _settings = _settingsRepository.Load();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -134,27 +135,31 @@ namespace DeathWorm.Services
             switch (settingChoice)
             {
                 case "Server":
-                    _server = AnsiConsole.Prompt(
+                    _settings.Server = AnsiConsole.Prompt(
                         new TextPrompt<string>("[blue]Server:[/]")
-                            .DefaultValue(_server));
+                            .DefaultValue(_settings.Server));
+                    _settingsRepository.Save(_settings);
                     break;
 
                 case "Port":
-                    _port = AnsiConsole.Prompt(
+                    _settings.Port = AnsiConsole.Prompt(
                         new TextPrompt<int>("[blue]Port:[/]")
-                            .DefaultValue(_port));
+                            .DefaultValue(_settings.Port));
+                    _settingsRepository.Save(_settings);
                     break;
 
                 case "Benutzername":
-                    _userName = AnsiConsole.Prompt(
+                    _settings.UserName = AnsiConsole.Prompt(
                         new TextPrompt<string>("[blue]Benutzername:[/]")
-                            .DefaultValue(_userName));
+                            .DefaultValue(_settings.UserName));
+                    _settingsRepository.Save(_settings);
                     break;
 
                 case "Spielname":
-                    _gameName = AnsiConsole.Prompt(
+                    _settings.GameName = AnsiConsole.Prompt(
                         new TextPrompt<string>("[blue]Spielname:[/]")
-                            .DefaultValue(_gameName));
+                            .DefaultValue(_settings.GameName));
+                    _settingsRepository.Save(_settings);
                     break;
 
                 case "Zurück":
@@ -168,23 +173,23 @@ namespace DeathWorm.Services
             table.AddColumn("Einstellung");
             table.AddColumn("Wert");
 
-            table.AddRow("Server", _server);
-            table.AddRow("Port", _port.ToString());
-            table.AddRow("Benutzername", _userName);
-            table.AddRow("Spielname", _gameName);
+            table.AddRow("Server", _settings.Server);
+            table.AddRow("Port", _settings.Port.ToString());
+            table.AddRow("Benutzername", _settings.UserName);
+            table.AddRow("Spielname", _settings.GameName);
 
             AnsiConsole.Write(table);
         }
 
         private ArchipelagoClient? Connect()
         {
-            AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_server}:{_port}...[/]");
+            AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_settings.Server}:{_settings.Port}...[/]");
 
             var client = new ArchipelagoClient(
-                server: _server,
-                port: _port,
-                userName: _userName,
-                gameName: _gameName);
+                server: _settings.Server,
+                port: _settings.Port,
+                userName: _settings.UserName,
+                gameName: _settings.GameName);
 
             client.OnPacketReceived += OnClientPacketReceived;
 
