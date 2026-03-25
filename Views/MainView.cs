@@ -1,4 +1,6 @@
 using DeathWorm.Utils;
+using DeathWorm.Services;
+using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using Spectre.Console;
 
@@ -7,10 +9,12 @@ namespace DeathWorm.Views
     public class MainView
     {
         private readonly MainViewModel _viewModel;
+        private readonly TranslationService _t;
 
-        public MainView(MainViewModel viewModel)
+        public MainView(MainViewModel viewModel, TranslationService translationService)
         {
             _viewModel = viewModel;
+            _t = translationService;
         }
 
         public void Clear()
@@ -26,13 +30,14 @@ namespace DeathWorm.Views
         public void ShowSettings()
         {
             var table = new Table();
-            table.AddColumn("Einstellung");
-            table.AddColumn("Wert");
+            table.AddColumn(_t.Get(TranslationKeys.SettingsTableTitle));
+            table.AddColumn(_t.Get(TranslationKeys.SettingsTableValue));
 
-            table.AddRow("Server", _viewModel.Settings.Server);
-            table.AddRow("Port", _viewModel.Settings.Port.ToString());
-            table.AddRow("Benutzername", _viewModel.Settings.UserName);
-            table.AddRow("Spielname", _viewModel.Settings.GameName);
+            table.AddRow(_t.Get(TranslationKeys.Server), _viewModel.Settings.Server);
+            table.AddRow(_t.Get(TranslationKeys.Port), _viewModel.Settings.Port.ToString());
+            table.AddRow(_t.Get(TranslationKeys.UserName), _viewModel.Settings.UserName);
+            table.AddRow(_t.Get(TranslationKeys.GameName), _viewModel.Settings.GameName);
+            table.AddRow(_t.Get(TranslationKeys.Language), _t.CurrentLanguage.ToUpper());
 
             AnsiConsole.Write(table);
         }
@@ -41,22 +46,22 @@ namespace DeathWorm.Views
         {
             var choices = new List<string>
             {
-                MenuChoices.EditSettings,
-                MenuChoices.Connect
+                _t.Get(TranslationKeys.EditSettings),
+                _t.Get(TranslationKeys.Connect)
             };
 
             if (_viewModel.IsConnected)
             {
-                choices.Add(MenuChoices.ShowStatus);
-                choices.Add(MenuChoices.SendDeathLink);
-                choices.Add(MenuChoices.SendChat);
+                choices.Add(_t.Get(TranslationKeys.ShowStatus));
+                choices.Add(_t.Get(TranslationKeys.SendDeathLink));
+                choices.Add(_t.Get(TranslationKeys.SendChat));
             }
 
-            choices.Add(MenuChoices.Exit);
+            choices.Add(_t.Get(TranslationKeys.Exit));
 
             return AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("[green]Hauptmenü[/]")
+                    .Title($"[green]{_t.Get(TranslationKeys.MainMenuTitle)}[/]")
                     .AddChoices(choices));
         }
 
@@ -64,87 +69,96 @@ namespace DeathWorm.Views
         {
             return AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("[yellow]Welche Einstellung möchtest du ändern?[/]")
+                    .Title($"[yellow]{_t.Get(TranslationKeys.SettingsMenuTitle)}[/]")
                     .AddChoices(
-                        MenuChoices.Server,
-                        MenuChoices.Port,
-                        MenuChoices.UserName,
-                        MenuChoices.GameName,
-                        MenuChoices.Back));
+                        _t.Get(TranslationKeys.Server),
+                        _t.Get(TranslationKeys.Port),
+                        _t.Get(TranslationKeys.UserName),
+                        _t.Get(TranslationKeys.GameName),
+                        _t.Get(TranslationKeys.Language),
+                        _t.Get(TranslationKeys.Back)));
         }
 
-        public string PromptString(string label, string defaultValue)
+        public string ShowLanguageMenu()
         {
             return AnsiConsole.Prompt(
-                new TextPrompt<string>($"[blue]{label}:[/]")
+                new SelectionPrompt<string>()
+                    .Title($"[yellow]{_t.Get(TranslationKeys.Language)}[/]")
+                    .AddChoices(Translations.SupportedLanguages.ToArray()));
+        }
+
+        public string PromptString(string key, string defaultValue)
+        {
+            return AnsiConsole.Prompt(
+                new TextPrompt<string>($"[blue]{_t.Get(key)}:[/]")
                     .DefaultValue(defaultValue));
         }
 
-        public int PromptInt(string label, int defaultValue)
+        public int PromptInt(string key, int defaultValue)
         {
             return AnsiConsole.Prompt(
-                new TextPrompt<int>($"[blue]{label}:[/]")
+                new TextPrompt<int>($"[blue]{_t.Get(key)}:[/]")
                     .DefaultValue(defaultValue));
         }
 
         public void ShowConnecting()
         {
-            AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_viewModel.Settings.Server}:{_viewModel.Settings.Port}...[/]");
+            AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.Connecting, _viewModel.Settings.Server, _viewModel.Settings.Port)}[/]");
         }
 
         public void ShowConnectionSuccess()
         {
-            AnsiConsole.MarkupLine("[green]Erfolgreich verbunden![/]");
+            AnsiConsole.MarkupLine($"[green]{_t.Get(TranslationKeys.ConnectionSuccess)}[/]");
         }
 
         public void ShowConnectionError(string errorMessage)
         {
-            AnsiConsole.MarkupLine("[red]Verbindung fehlgeschlagen![/]");
+            AnsiConsole.MarkupLine($"[red]{_t.Get(TranslationKeys.ConnectionFailed)}[/]");
             AnsiConsole.MarkupLine($"[red]{Markup.Escape(errorMessage)}[/]");
         }
 
         public void ShowDeathLinkSent()
         {
-            AnsiConsole.MarkupLine("[green]Death Link gesendet![/]");
+            AnsiConsole.MarkupLine($"[green]{_t.Get(TranslationKeys.DeathLinkSent)}[/]");
         }
 
         public void ShowDeathLinkCancelled()
         {
-            AnsiConsole.MarkupLine("[yellow]Death Link abgebrochen.[/]");
+            AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.DeathLinkCancelled)}[/]");
         }
 
         public bool ConfirmDeathLink()
         {
             var choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title("[red]Möchtest du wirklich einen Death Link senden?[/]")
-                    .AddChoices(MenuChoices.Yes, MenuChoices.No));
+                    .Title($"[red]{_t.Get(TranslationKeys.DeathLinkConfirm)}[/]")
+                    .AddChoices(_t.Get(TranslationKeys.Yes), _t.Get(TranslationKeys.No)));
 
-            return choice == MenuChoices.Yes;
+            return choice == _t.Get(TranslationKeys.Yes);
         }
 
         public string PromptDeathLinkMessage()
         {
             return AnsiConsole.Prompt(
-                new TextPrompt<string>("[blue]Nachricht (leer für zufällige Nachricht):[/]")
+                new TextPrompt<string>($"[blue]{_t.Get(TranslationKeys.DeathLinkMessagePrompt)}[/]")
                     .AllowEmpty());
         }
 
         public string PromptChatMessage()
         {
             return AnsiConsole.Prompt(
-                new TextPrompt<string>("[blue]Chat-Nachricht (leer zum Abbrechen):[/]")
+                new TextPrompt<string>($"[blue]{_t.Get(TranslationKeys.ChatMessagePrompt)}[/]")
                     .AllowEmpty());
         }
 
         public void ShowChatSent()
         {
-            AnsiConsole.MarkupLine("[green]Chat-Nachricht gesendet![/]");
+            AnsiConsole.MarkupLine($"[green]{_t.Get(TranslationKeys.ChatSent)}[/]");
         }
 
         public void ShowChatCancelled()
         {
-            AnsiConsole.MarkupLine("[yellow]Chat abgebrochen.[/]");
+            AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.ChatCancelled)}[/]");
         }
 
         public void ShowError(string errorMessage)
@@ -154,7 +168,7 @@ namespace DeathWorm.Views
 
         public void WaitForKeyPress()
         {
-            AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
+            AnsiConsole.MarkupLine($"[grey]{_t.Get(TranslationKeys.PressKeyToContinue)}[/]");
             Console.ReadKey(true);
         }
     }

@@ -1,4 +1,5 @@
 using DeathWorm.Utils;
+using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using DeathWorm.Views;
 using Microsoft.Extensions.Hosting;
@@ -10,18 +11,21 @@ namespace DeathWorm.Services
         private readonly IHostApplicationLifetime _lifetime;
         private readonly MainViewModel _viewModel;
         private readonly MainView _view;
-        private readonly StatusView _messagesView;
+        private readonly StatusView _statusView;
+        private readonly TranslationService _t;
 
         public MainService(
             IHostApplicationLifetime lifetime,
             MainViewModel viewModel,
             MainView view,
-            StatusView messagesView)
+            StatusView statusView,
+            TranslationService translationService)
         {
             _lifetime = lifetime;
             _viewModel = viewModel;
             _view = view;
-            _messagesView = messagesView;
+            _statusView = statusView;
+            _t = translationService;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -49,34 +53,33 @@ namespace DeathWorm.Services
 
                 var choice = _view.ShowMainMenu();
 
-                switch (choice)
+                if (choice == _t.Get(TranslationKeys.EditSettings))
                 {
-                    case MenuChoices.EditSettings:
-                        EditSettings();
-                        break;
-
-                    case MenuChoices.Connect:
-                        Connect();
-                        _view.WaitForKeyPress();
-                        break;
-
-                    case MenuChoices.ShowStatus:
-                        _messagesView.Show(cancellationToken);
-                        break;
-
-                    case MenuChoices.SendDeathLink:
-                        SendDeathLink();
-                        _view.WaitForKeyPress();
-                        break;
-
-                    case MenuChoices.SendChat:
-                        SendChat();
-                        _view.WaitForKeyPress();
-                        break;
-
-                    case MenuChoices.Exit:
-                        _lifetime.StopApplication();
-                        return;
+                    EditSettings();
+                }
+                else if (choice == _t.Get(TranslationKeys.Connect))
+                {
+                    Connect();
+                    _view.WaitForKeyPress();
+                }
+                else if (choice == _t.Get(TranslationKeys.ShowStatus))
+                {
+                    _statusView.Show(cancellationToken);
+                }
+                else if (choice == _t.Get(TranslationKeys.SendDeathLink))
+                {
+                    SendDeathLink();
+                    _view.WaitForKeyPress();
+                }
+                else if (choice == _t.Get(TranslationKeys.SendChat))
+                {
+                    SendChat();
+                    _view.WaitForKeyPress();
+                }
+                else if (choice == _t.Get(TranslationKeys.Exit))
+                {
+                    _lifetime.StopApplication();
+                    return;
                 }
             }
         }
@@ -85,30 +88,30 @@ namespace DeathWorm.Services
         {
             var settingChoice = _view.ShowSettingsMenu();
 
-            switch (settingChoice)
+            if (settingChoice == _t.Get(TranslationKeys.Server))
             {
-                case MenuChoices.Server:
-                    var server = _view.PromptString("Server", _viewModel.Settings.Server);
-                    _viewModel.UpdateServer(server);
-                    break;
-
-                case MenuChoices.Port:
-                    var port = _view.PromptInt("Port", _viewModel.Settings.Port);
-                    _viewModel.UpdatePort(port);
-                    break;
-
-                case MenuChoices.UserName:
-                    var userName = _view.PromptString("Benutzername", _viewModel.Settings.UserName);
-                    _viewModel.UpdateUserName(userName);
-                    break;
-
-                case MenuChoices.GameName:
-                    var gameName = _view.PromptString("Spielname", _viewModel.Settings.GameName);
-                    _viewModel.UpdateGameName(gameName);
-                    break;
-
-                case MenuChoices.Back:
-                    break;
+                var server = _view.PromptString(TranslationKeys.Server, _viewModel.Settings.Server);
+                _viewModel.UpdateServer(server);
+            }
+            else if (settingChoice == _t.Get(TranslationKeys.Port))
+            {
+                var port = _view.PromptInt(TranslationKeys.Port, _viewModel.Settings.Port);
+                _viewModel.UpdatePort(port);
+            }
+            else if (settingChoice == _t.Get(TranslationKeys.UserName))
+            {
+                var userName = _view.PromptString(TranslationKeys.UserName, _viewModel.Settings.UserName);
+                _viewModel.UpdateUserName(userName);
+            }
+            else if (settingChoice == _t.Get(TranslationKeys.GameName))
+            {
+                var gameName = _view.PromptString(TranslationKeys.GameName, _viewModel.Settings.GameName);
+                _viewModel.UpdateGameName(gameName);
+            }
+            else if (settingChoice == _t.Get(TranslationKeys.Language))
+            {
+                var language = _view.ShowLanguageMenu();
+                _t.SetLanguage(language);
             }
         }
 
@@ -124,7 +127,7 @@ namespace DeathWorm.Services
             }
             else
             {
-                _view.ShowConnectionError(result.ErrorMessage ?? "Unbekannter Fehler");
+                _view.ShowConnectionError(result.ErrorMessage ?? "Unknown error");
             }
         }
 
@@ -145,7 +148,7 @@ namespace DeathWorm.Services
             }
             else
             {
-                _view.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+                _view.ShowError(result.ErrorMessage ?? "Unknown error");
             }
         }
 
@@ -167,7 +170,7 @@ namespace DeathWorm.Services
             }
             else
             {
-                _view.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+                _view.ShowError(result.ErrorMessage ?? "Unknown error");
             }
         }
     }

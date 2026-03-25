@@ -1,5 +1,6 @@
 using DeathWorm.Services;
 using DeathWorm.Clients;
+using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -21,19 +22,22 @@ namespace DeathWorm.Views
         private readonly ArchipelagoClientService _archipelagoClient;
         private readonly MainView _mainView;
         private readonly MainViewModel _viewModel;
+        private readonly TranslationService _t;
 
         public StatusView(
             MessageService messageService, 
             DeathDataService deathDataService, 
             ArchipelagoClientService archipelagoClient,
             MainView mainView,
-            MainViewModel viewModel)
+            MainViewModel viewModel,
+            TranslationService translationService)
         {
             _messageService = messageService;
             _deathDataService = deathDataService;
             _archipelagoClient = archipelagoClient;
             _mainView = mainView;
             _viewModel = viewModel;
+            _t = translationService;
         }
 
         public void Show(CancellationToken cancellationToken)
@@ -115,7 +119,7 @@ namespace DeathWorm.Views
             }
             else
             {
-                _mainView.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+                _mainView.ShowError(result.ErrorMessage ?? "Unknown error");
             }
 
             _mainView.WaitForKeyPress();
@@ -142,7 +146,7 @@ namespace DeathWorm.Views
             }
             else
             {
-                _mainView.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
+                _mainView.ShowError(result.ErrorMessage ?? "Unknown error");
             }
 
             _mainView.WaitForKeyPress();
@@ -151,15 +155,15 @@ namespace DeathWorm.Views
         private IRenderable CreateLayout()
         {
             var connectionStatus = _archipelagoClient.IsConnected
-                ? "[green]Verbunden[/]"
-                : "[red]Nicht verbunden[/]";
+                ? $"[green]{_t.Get(TranslationKeys.Connected)}[/]"
+                : $"[red]{_t.Get(TranslationKeys.Disconnected)}[/]";
 
             var layout = new Table();
             layout.Border = TableBorder.None;
             layout.AddColumn(new TableColumn("").Width(50));
             layout.AddColumn(new TableColumn("").Width(50));
-            layout.Title = new TableTitle($"[yellow]Status[/] | Verbindung: {connectionStatus}");
-            layout.Caption = new TableTitle("[grey][[1]][/] Zurück zum Hauptmenü  [grey][[2]][/] Death Link senden  [grey][[3]][/] Chat senden");
+            layout.Title = new TableTitle($"[yellow]{_t.Get(TranslationKeys.StatusTitle)}[/] | {_t.Get(TranslationKeys.Connection)}: {connectionStatus}");
+            layout.Caption = new TableTitle($"[grey][[1]][/] {_t.Get(TranslationKeys.BackToMainMenu)}  [grey][[2]][/] {_t.Get(TranslationKeys.SendDeathLink)}  [grey][[3]][/] {_t.Get(TranslationKeys.SendChat)}");
 
             layout.AddRow(CreateMessagesTable(), CreateDeathDataTable());
 
@@ -169,9 +173,9 @@ namespace DeathWorm.Views
         private Table CreateMessagesTable()
         {
             var table = new Table();
-            table.AddColumn("Zeit");
-            table.AddColumn("Nachricht");
-            table.Title = new TableTitle("[yellow]Live Nachrichten[/]");
+            table.AddColumn(_t.Get(TranslationKeys.Time));
+            table.AddColumn(_t.Get(TranslationKeys.Message));
+            table.Title = new TableTitle($"[yellow]{_t.Get(TranslationKeys.LiveMessages)}[/]");
             table.Border = TableBorder.Rounded;
             table.Expand();
 
@@ -179,7 +183,7 @@ namespace DeathWorm.Views
 
             if (messages.Count == 0)
             {
-                table.AddRow("[grey]-[/]", "[grey]Keine Nachrichten vorhanden[/]");
+                table.AddRow("[grey]-[/]", $"[grey]{_t.Get(TranslationKeys.NoMessages)}[/]");
             }
             else
             {
@@ -197,10 +201,10 @@ namespace DeathWorm.Views
         private Table CreateDeathDataTable()
         {
             var table = new Table();
-            table.AddColumn("Spieler");
-            table.AddColumn("Tode");
-            table.AddColumn("Verteilung");
-            table.Title = new TableTitle("[red]Death Counter[/]");
+            table.AddColumn(_t.Get(TranslationKeys.Player));
+            table.AddColumn(_t.Get(TranslationKeys.Deaths));
+            table.AddColumn(_t.Get(TranslationKeys.Distribution));
+            table.Title = new TableTitle($"[red]{_t.Get(TranslationKeys.DeathCounter)}[/]");
             table.Border = TableBorder.Rounded;
             table.Expand();
 
@@ -208,7 +212,7 @@ namespace DeathWorm.Views
 
             if (deathData.Count == 0)
             {
-                table.AddRow("[grey]-[/]", "[grey]-[/]", "[grey]Keine Daten vorhanden[/]");
+                table.AddRow("[grey]-[/]", "[grey]-[/]", $"[grey]{_t.Get(TranslationKeys.NoData)}[/]");
             }
             else
             {
