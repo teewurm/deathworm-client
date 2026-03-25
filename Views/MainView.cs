@@ -47,12 +47,12 @@ namespace DeathWorm.Views
             var choices = new List<string>
             {
                 _t.Get(TranslationKeys.EditSettings),
-                _t.Get(TranslationKeys.Connect)
+                _t.Get(TranslationKeys.Connect),
+                _t.Get(TranslationKeys.ShowStatus)
             };
 
             if (_viewModel.IsConnected)
             {
-                choices.Add(_t.Get(TranslationKeys.ShowStatus));
                 choices.Add(_t.Get(TranslationKeys.SendDeathLink));
                 choices.Add(_t.Get(TranslationKeys.SendChat));
             }
