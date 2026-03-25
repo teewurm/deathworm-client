@@ -125,7 +125,14 @@ namespace DeathWorm.Services
 
         private void SendDeathLink()
         {
-            var result = _viewModel.SendDeathLink();
+            if (!_view.ConfirmDeathLink())
+            {
+                _view.ShowDeathLinkCancelled();
+                return;
+            }
+
+            var message = _view.PromptDeathLinkMessage();
+            var result = _viewModel.SendDeathLink(message);
 
             if (result.Success)
             {

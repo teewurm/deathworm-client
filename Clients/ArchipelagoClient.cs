@@ -1,4 +1,5 @@
 ﻿using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Packets;
@@ -6,6 +7,7 @@ using DeathWorm.Extensions;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
 using DeathWorm.Services;
+using DeathWorm.Utils;
 
 namespace DeathWorm.Clients
 {
@@ -121,7 +123,7 @@ namespace DeathWorm.Clients
             return new ConnectResult(true);
         }
 
-        public ConnectResult SendDeathLink()
+        public ConnectResult SendDeathLink(string? message = null)
         {
             if (!_isConnected)
             {
@@ -129,7 +131,11 @@ namespace DeathWorm.Clients
             }
 
             var settings = _settingsRepository.Load();
-            _deathLinkService!.SendDeathLink(new DeathLink(sourcePlayer: settings.UserName, "Fabi ist schuld"));
+            var deathMessage = string.IsNullOrWhiteSpace(message) 
+                ? DeathLinkMessages.GetRandomMessage() 
+                : message;
+
+            _deathLinkService!.SendDeathLink(new DeathLink(sourcePlayer: settings.UserName, deathMessage));
             return new ConnectResult(true);
         }
     }

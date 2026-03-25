@@ -107,6 +107,28 @@ namespace DeathWorm.Views
             AnsiConsole.MarkupLine("[green]Death Link gesendet![/]");
         }
 
+        public void ShowDeathLinkCancelled()
+        {
+            AnsiConsole.MarkupLine("[yellow]Death Link abgebrochen.[/]");
+        }
+
+        public bool ConfirmDeathLink()
+        {
+            var choice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[red]Möchtest du wirklich einen Death Link senden?[/]")
+                    .AddChoices(MenuChoices.Yes, MenuChoices.No));
+
+            return choice == MenuChoices.Yes;
+        }
+
+        public string PromptDeathLinkMessage()
+        {
+            return AnsiConsole.Prompt(
+                new TextPrompt<string>("[blue]Nachricht (leer für zufällige Nachricht):[/]")
+                    .AllowEmpty());
+        }
+
         public void ShowError(string errorMessage)
         {
             AnsiConsole.MarkupLine($"[red]{Markup.Escape(errorMessage)}[/]");

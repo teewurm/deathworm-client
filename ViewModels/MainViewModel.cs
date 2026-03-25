@@ -57,9 +57,9 @@ namespace DeathWorm.ViewModels
             return _archipelagoService.Connect();
         }
 
-        public ConnectResult SendDeathLink()
+        public ConnectResult SendDeathLink(string? message = null)
         {
-            return _archipelagoService.SendDeathLink();
+            return _archipelagoService.SendDeathLink(message);
         }
     }
 }
