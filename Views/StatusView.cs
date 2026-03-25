@@ -115,14 +115,22 @@ namespace DeathWorm.Views
                 foreach (var player in deathData.OrderByDescending(d => d.Timestamps.Count))
                 {
                     var deathCount = player.Timestamps.Count;
+                    var percentage = maxDeaths > 0 ? (double)deathCount / maxDeaths * 100 : 0;
                     var filledWidth = maxDeaths > 0 ? (int)Math.Round((double)deathCount / maxDeaths * barWidth) : 0;
                     var emptyWidth = barWidth - filledWidth;
 
-                    var bar = $"[red]{new string('#', filledWidth)}[/][grey]{new string('-', emptyWidth)}[/]";
+                    var barColor = percentage switch
+                    {
+                        >= 66 => "red",
+                        >= 33 => "yellow",
+                        _ => "green"
+                    };
+
+                    var bar = $"[{barColor}]{new string('#', filledWidth)}[/][grey]{new string('-', emptyWidth)}[/]";
 
                     table.AddRow(
-                        $"[blue]{player.PlayerName}[/]",
-                        $"[red]{deathCount}[/]",
+                        $"[blue]{Markup.Escape(player.PlayerName)}[/]",
+                        $"[{barColor}]{deathCount}[/]",
                         bar);
                 }
             }
