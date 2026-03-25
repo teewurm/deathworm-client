@@ -5,11 +5,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ApplicationIcon>graveyard.ico</ApplicationIcon>
+    <ApplicationIcon>skull-red-icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="graveyard.ico" />
+    <Content Include="skull-red-icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
