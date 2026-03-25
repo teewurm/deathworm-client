@@ -4,6 +4,7 @@ using Archipelago.MultiClient.Net.Enums;
 using Archipelago.MultiClient.Net.Packets;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
+using DeathWorm.Utils;
 
 namespace DeathWorm.Clients
 {
@@ -19,7 +20,8 @@ namespace DeathWorm.Clients
         private bool _isConnected;
         public bool IsConnected => _isConnected;
 
-        public event Action<string>? OnPacketReceived;
+        //public event Action<string>? OnPacketReceived;
+        public event Action<WormDeathLink>? OnDeathLinkReceived;
 
         public ArchipelagoClientService(SettingsRepository settingsRepository)
         {
@@ -66,7 +68,12 @@ namespace DeathWorm.Clients
 
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
         {
-            OnPacketReceived?.Invoke($"Packet received: {packet.PacketType}");
+            //OnPacketReceived?.Invoke($"Packet received: {packet.PacketType}");
+
+            if (packet is BouncedPacket bouncedPacket && bouncedPacket.Tags.Contains("DeathLink") && WormDeathLink.TryParse(bouncedPacket.Data, out var deathLink))
+            {
+                OnDeathLinkReceived?.Invoke(deathLink);
+            }
         }
 
         public ConnectResult Connect()
@@ -116,17 +123,16 @@ namespace DeathWorm.Clients
         {
             if (!_isConnected)
             {
-                var result = Connect();
-                if (!result.Success)
-                {
-                    OnPacketReceived?.Invoke($"Reconnect failed: {result.ErrorMessage}");
-                    return;
-                }
-                OnPacketReceived?.Invoke("Reconnected successfully");
+                return;
             }
 
             var settings = _settingsRepository.Load();
             _deathLinkService!.SendDeathLink(new DeathLink(sourcePlayer: settings.UserName, "Fabi ist schuld"));
         }
+
+        //public bool LoadPlayerInfos(out )
+        //{
+
+        //}
     }
 }

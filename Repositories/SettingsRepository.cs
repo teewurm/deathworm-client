@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DeathWorm.Models;
+using DeathWorm.Utils;
 
 namespace DeathWorm.Repositories
 {
@@ -17,7 +18,7 @@ namespace DeathWorm.Repositories
             _settingsDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "DeathWorm");
-            _settingsFilePath = Path.Combine(_settingsDirectory, "settings.json");
+            _settingsFilePath = Path.Combine(_settingsDirectory, Constants.SettingsFile);
         }
 
         public AppSettings Load()

@@ -1,6 +1,7 @@
 using DeathWorm.Clients;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
+using DeathWorm.Utils;
 using Microsoft.Extensions.Hosting;
 using Spectre.Console;
 
@@ -10,6 +11,7 @@ namespace DeathWorm.Services
     {
         private readonly IHostApplicationLifetime _lifetime;
         private readonly SettingsRepository _settingsRepository;
+        private readonly DeathDataRepository _deathDataRepository;
         private readonly ArchipelagoClientService _archipelagoClient;
         private readonly List<string> _packetLog = new();
         private readonly object _logLock = new();
@@ -19,14 +21,16 @@ namespace DeathWorm.Services
         public MainService(
             IHostApplicationLifetime lifetime, 
             SettingsRepository settingsRepository,
+            DeathDataRepository deathDataRepository,
             ArchipelagoClientService archipelagoClient)
         {
             _lifetime = lifetime;
             _settingsRepository = settingsRepository;
+            _deathDataRepository = deathDataRepository;
             _archipelagoClient = archipelagoClient;
             _settings = _settingsRepository.Load();
 
-            _archipelagoClient.OnPacketReceived += OnClientPacketReceived;
+            _archipelagoClient.OnDeathLinkReceived += OnDeathLinkReceived;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -44,11 +48,13 @@ namespace DeathWorm.Services
             return Task.CompletedTask;
         }
 
-        private void OnClientPacketReceived(string message)
+        private void OnDeathLinkReceived(WormDeathLink deathLink)
         {
+            _deathDataRepository.AddDeath(deathLink.Source, deathLink.Timestamp);
+
             lock (_logLock)
             {
-                _packetLog.Add($"[grey]{DateTime.Now:HH:mm:ss}[/] {message}");
+                _packetLog.Add($"[grey]{DateTime.Now:HH:mm:ss}[/] [red]DeathLink von {deathLink.Source}[/]");
                 if (_packetLog.Count > 5)
                     _packetLog.RemoveAt(0);
             }
