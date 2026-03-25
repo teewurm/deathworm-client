@@ -73,7 +73,7 @@ namespace DeathWorm.Clients
             if (packet is BouncedPacket bouncedPacket && bouncedPacket.Tags.Contains("DeathLink") && WormDeathLink.TryParse(bouncedPacket.Data, out var deathLink))
             {
                 _deathDataService.AddDeath(deathLink.Source, deathLink.Timestamp);
-                _messageService.AddMessage($"[grey]{DateTime.Now:HH:mm:ss}[/] [red]DeathLink von {deathLink.Source}[/]");
+                _messageService.AddMessage($"[grey]{DateTime.Now:HH:mm:ss}[/] [red]DeathLink von {deathLink.Source}[/] [blue]{deathLink.Cause}[/]");
             }
         }
 

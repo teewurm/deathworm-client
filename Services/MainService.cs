@@ -1,9 +1,8 @@
 using DeathWorm.Clients;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
-using DeathWorm.Utils;
+using DeathWorm.Views;
 using Microsoft.Extensions.Hosting;
-using Spectre.Console;
 
 namespace DeathWorm.Services
 {
@@ -13,6 +12,7 @@ namespace DeathWorm.Services
         private readonly SettingsRepository _settingsRepository;
         private readonly ArchipelagoClientService _archipelagoService;
         private readonly MessageService _messageService;
+        private readonly MainView _view;
 
         private AppSettings _settings;
 
@@ -20,12 +20,14 @@ namespace DeathWorm.Services
             IHostApplicationLifetime lifetime, 
             SettingsRepository settingsRepository,
             ArchipelagoClientService archipelagoService,
-            MessageService messageService)
+            MessageService messageService,
+            MainView view)
         {
             _lifetime = lifetime;
             _settingsRepository = settingsRepository;
             _archipelagoService = archipelagoService;
             _messageService = messageService;
+            _view = view;
             _settings = _settingsRepository.Load();
         }
 
@@ -44,46 +46,20 @@ namespace DeathWorm.Services
             return Task.CompletedTask;
         }
 
-        private void ShowPacketLog()
-        {
-            var messages = _messageService.GetMessages();
-            if (messages.Count > 0)
-            {
-                AnsiConsole.MarkupLine("\n[yellow]Letzte Nachrichten:[/]");
-                foreach (var message in messages)
-                {
-                    AnsiConsole.MarkupLine(message);
-                }
-            }
-        }
-
         private void Run(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                AnsiConsole.Clear();
-                AnsiConsole.Write(new FigletText("DeathWorm").Color(Color.Red));
-                ShowCurrentSettings();
-                ShowPacketLog();
+                _view.Clear();
+                _view.ShowHeader();
+                _view.ShowSettings(_settings);
+                _view.ShowMessages(_messageService.GetMessages());
 
-                var connectionStatus = _archipelagoService.IsConnected
-                    ? "[green](Verbunden)[/]"
-                    : "[red](Nicht verbunden)[/]";
-
-                var choice = AnsiConsole.Prompt(
-                    new SelectionPrompt<string>()
-                        .Title($"[green]Hauptmenü[/] {connectionStatus}")
-                        .AddChoices(
-                            "Aktualisieren",
-                            "Einstellungen bearbeiten",
-                            "Verbinden",
-                            "Death Link senden",
-                            "Beenden"));
+                var choice = _view.ShowMainMenu();
 
                 switch (choice)
                 {
                     case "Aktualisieren":
-                        // Menü wird automatisch neu gezeichnet
                         break;
 
                     case "Einstellungen bearbeiten":
@@ -92,22 +68,12 @@ namespace DeathWorm.Services
 
                     case "Verbinden":
                         Connect();
-                        AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
-                        Console.ReadKey(true);
+                        _view.WaitForKeyPress();
                         break;
 
                     case "Death Link senden":
-                        var sendResult = _archipelagoService.SendDeathLink();
-                        if (sendResult.Success)
-                        {
-                            AnsiConsole.MarkupLine("[green]Death Link gesendet![/]");
-                        }
-                        else
-                        {
-                            AnsiConsole.MarkupLine($"[red]{Markup.Escape(sendResult.ErrorMessage ?? "Unbekannter Fehler")}[/]");
-                        }
-                        AnsiConsole.MarkupLine("[grey]Drücke eine Taste um fortzufahren...[/]");
-                        Console.ReadKey(true);
+                        SendDeathLink();
+                        _view.WaitForKeyPress();
                         break;
 
                     case "Beenden":
@@ -119,43 +85,27 @@ namespace DeathWorm.Services
 
         private void EditSettings()
         {
-            var settingChoice = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("[yellow]Welche Einstellung möchtest du ändern?[/]")
-                    .AddChoices(
-                        "Server",
-                        "Port",
-                        "Benutzername",
-                        "Spielname",
-                        "Zurück"));
+            var settingChoice = _view.ShowSettingsMenu();
 
             switch (settingChoice)
             {
                 case "Server":
-                    _settings.Server = AnsiConsole.Prompt(
-                        new TextPrompt<string>("[blue]Server:[/]")
-                            .DefaultValue(_settings.Server));
+                    _settings.Server = _view.PromptString("Server", _settings.Server);
                     _settingsRepository.Save(_settings);
                     break;
 
                 case "Port":
-                    _settings.Port = AnsiConsole.Prompt(
-                        new TextPrompt<int>("[blue]Port:[/]")
-                            .DefaultValue(_settings.Port));
+                    _settings.Port = _view.PromptInt("Port", _settings.Port);
                     _settingsRepository.Save(_settings);
                     break;
 
                 case "Benutzername":
-                    _settings.UserName = AnsiConsole.Prompt(
-                        new TextPrompt<string>("[blue]Benutzername:[/]")
-                            .DefaultValue(_settings.UserName));
+                    _settings.UserName = _view.PromptString("Benutzername", _settings.UserName);
                     _settingsRepository.Save(_settings);
                     break;
 
                 case "Spielname":
-                    _settings.GameName = AnsiConsole.Prompt(
-                        new TextPrompt<string>("[blue]Spielname:[/]")
-                            .DefaultValue(_settings.GameName));
+                    _settings.GameName = _view.PromptString("Spielname", _settings.GameName);
                     _settingsRepository.Save(_settings);
                     break;
 
@@ -164,35 +114,34 @@ namespace DeathWorm.Services
             }
         }
 
-        private void ShowCurrentSettings()
-        {
-            var table = new Table();
-            table.AddColumn("Einstellung");
-            table.AddColumn("Wert");
-
-            table.AddRow("Server", _settings.Server);
-            table.AddRow("Port", _settings.Port.ToString());
-            table.AddRow("Benutzername", _settings.UserName);
-            table.AddRow("Spielname", _settings.GameName);
-
-            AnsiConsole.Write(table);
-        }
-
         private void Connect()
         {
             _settings = _settingsRepository.Load();
-            AnsiConsole.MarkupLine($"[yellow]Verbinde mit {_settings.Server}:{_settings.Port}...[/]");
+            _view.ShowConnecting(_settings.Server, _settings.Port);
 
             var result = _archipelagoService.Connect();
 
             if (result.Success)
             {
-                AnsiConsole.MarkupLine("[green]Erfolgreich verbunden![/]");
+                _view.ShowConnectionSuccess();
             }
             else
             {
-                AnsiConsole.MarkupLine($"[red]Verbindung fehlgeschlagen![/]");
-                AnsiConsole.MarkupLine($"[red]{Markup.Escape(result.ErrorMessage ?? "Unbekannter Fehler")}[/]");
+                _view.ShowConnectionError(result.ErrorMessage ?? "Unbekannter Fehler");
+            }
+        }
+
+        private void SendDeathLink()
+        {
+            var result = _archipelagoService.SendDeathLink();
+
+            if (result.Success)
+            {
+                _view.ShowDeathLinkSent();
+            }
+            else
+            {
+                _view.ShowError(result.ErrorMessage ?? "Unbekannter Fehler");
             }
         }
     }
