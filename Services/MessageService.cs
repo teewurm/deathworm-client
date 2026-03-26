@@ -17,13 +17,13 @@ namespace DeathWorm.Services
         {
             lock (_messagesLock)
             {
-                _messages.Add(new Message(DateTime.Now, text));
+                _messages.Add(new Message(DateTime.Now, Markup.Escape(text)));
                 if (_messages.Count > MaxMessages)
                     _messages.RemoveAt(0);
             }
         }
 
-        public void AddMessage(ArchipelagoPacketBase packet)
+        public void AddMessage(ArchipelagoPacketBase packet, Archipelago.MultiClient.Net.Helpers.IPlayerHelper players, Archipelago.MultiClient.Net.Helpers.IReceivedItemsHelper items)
         {
             if (packet.TryGetDeathLink(out var deathLink))
             {
@@ -42,6 +42,18 @@ namespace DeathWorm.Services
                     {
                         AddMessage($"[yellow]Raum aktualisiert - {roomUpdatePacket.Players.Length} Spieler[/]");
                     }
+                    break;
+
+                case ItemPrintJsonPacket itemPrintJsonPacket:
+                    
+                    //Item name can't be found when sending item to other player
+                    //(only when player finds their own items it shows the name)
+                    var itemName = items.GetItemName(itemPrintJsonPacket.Item.Item) ?? "Unknonw Item";
+                    var receivingPlayer = players.GetPlayerName(itemPrintJsonPacket.ReceivingPlayer) ?? "Unkown Player";
+                    var sendingPlayer = players.GetPlayerName(itemPrintJsonPacket.Item.Player) ?? "Unkown Player";
+
+                    AddMessage($"[red]{receivingPlayer}[/] [white]received[/] [blue]{itemName}[/] [white]from[/] [red]{sendingPlayer}[/]");
+
                     break;
 
                 case PrintJsonPacket printJsonPacket:
@@ -68,11 +80,6 @@ namespace DeathWorm.Services
                     AddMessage($"[yellow]Raum Info - Seed: {Markup.Escape(roomInfoPacket.SeedName ?? "")}[/]");
                     break;
 
-                case BouncedPacket bouncedPacket:
-                    var tags = string.Join(", ", bouncedPacket.Tags.Select(t => Markup.Escape(t)));
-                    AddMessage($"[blue]Bounced Packet - Tags: {tags}[/]");
-                    break;
-
                 case InvalidPacketPacket invalidPacket:
                     AddMessage($"[red]Ungültiges Packet: {Markup.Escape(invalidPacket.ErrorText ?? "")}[/]");
                     break;
@@ -83,6 +90,7 @@ namespace DeathWorm.Services
                     break;
 
                 // Ignorierte Packets (zu häufig oder unwichtig)
+                case BouncedPacket:
                 case RetrievedPacket:
                 case SetReplyPacket:
                     break;

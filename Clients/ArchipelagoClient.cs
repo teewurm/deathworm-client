@@ -1,6 +1,7 @@
 ﻿using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.BounceFeatures.DeathLink;
 using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Archipelago.MultiClient.Net.Packets;
 using DeathWorm.Extensions;
 using DeathWorm.Models;
@@ -70,8 +71,8 @@ namespace DeathWorm.Clients
         }
 
         private void HandlePacketReceived(ArchipelagoPacketBase packet)
-        {
-            _messageService.AddMessage(packet);
+        {           
+            _messageService.AddMessage(packet, _session.Players, _session.Items);
 
             if (packet.TryGetDeathLink(out var deathLink))
             {
