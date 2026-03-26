@@ -1,5 +1,4 @@
 using DeathWorm.Clients;
-using DeathWorm.Clients;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
 using DeathWorm.Services;
@@ -74,6 +73,21 @@ namespace DeathWorm.ViewModels
         public void ClearDeathData()
         {
             _deathDataService.Clear();
+        }
+
+        public string GetOtherDeathDataDirectory()
+        {
+            return _deathDataService.GetOtherDeathDataDirectory();
+        }
+
+        public bool HasOtherDeathDataFiles()
+        {
+            return _deathDataService.HasOtherDeathDataFiles();
+        }
+
+        public (bool Success, int MergedCount) MergeDeathData()
+        {
+            return _deathDataService.MergeFromOtherDeathDataFolder();
         }
     }
 }

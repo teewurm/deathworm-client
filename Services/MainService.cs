@@ -1,5 +1,4 @@
 using DeathWorm.Utils;
-using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using DeathWorm.Views;
 using Microsoft.Extensions.Hosting;
@@ -74,6 +73,11 @@ namespace DeathWorm.Services
                 else if (choice == _t.Get(TranslationKeys.SendChat))
                 {
                     SendChat();
+                    _view.WaitForKeyPress();
+                }
+                else if (choice == _t.Get(TranslationKeys.MergeDeathData))
+                {
+                    MergeDeathData();
                     _view.WaitForKeyPress();
                 }
                 else if (choice == _t.Get(TranslationKeys.ClearDeathData))
@@ -176,6 +180,34 @@ namespace DeathWorm.Services
             else
             {
                 _view.ShowError(result.ErrorMessage ?? "Unknown error");
+            }
+        }
+
+        private void MergeDeathData()
+        {
+            var folderPath = _viewModel.GetOtherDeathDataDirectory();
+
+            if (!_viewModel.HasOtherDeathDataFiles())
+            {
+                _view.ShowMergeDeathDataNoFiles(folderPath);
+                return;
+            }
+
+            if (!_view.ConfirmMergeDeathData(folderPath))
+            {
+                _view.ShowMergeDeathDataCancelled();
+                return;
+            }
+
+            var (success, mergedCount) = _viewModel.MergeDeathData();
+
+            if (success)
+            {
+                _view.ShowMergeDeathDataSuccess(mergedCount);
+            }
+            else
+            {
+                _view.ShowMergeDeathDataNoFiles(folderPath);
             }
         }
 

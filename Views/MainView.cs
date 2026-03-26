@@ -1,6 +1,5 @@
 using DeathWorm.Utils;
 using DeathWorm.Services;
-using DeathWorm.Utils;
 using DeathWorm.ViewModels;
 using Spectre.Console;
 
@@ -57,6 +56,7 @@ namespace DeathWorm.Views
                 choices.Add(_t.Get(TranslationKeys.SendChat));
             }
 
+            choices.Add(_t.Get(TranslationKeys.MergeDeathData));
             choices.Add(_t.Get(TranslationKeys.ClearDeathData));
             choices.Add(_t.Get(TranslationKeys.Exit));
 
@@ -191,6 +191,31 @@ namespace DeathWorm.Views
         public void ShowClearDeathDataCancelled()
         {
             AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.ClearDeathDataCancelled)}[/]");
+        }
+
+        public bool ConfirmMergeDeathData(string folderPath)
+        {
+            var choice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title($"[yellow]{_t.Get(TranslationKeys.MergeDeathDataPrompt, Markup.Escape(folderPath))}[/]")
+                    .AddChoices(_t.Get(TranslationKeys.Yes), _t.Get(TranslationKeys.No)));
+
+            return choice == _t.Get(TranslationKeys.Yes);
+        }
+
+        public void ShowMergeDeathDataSuccess(int mergedCount)
+        {
+            AnsiConsole.MarkupLine($"[green]{_t.Get(TranslationKeys.MergeDeathDataSuccess, mergedCount)}[/]");
+        }
+
+        public void ShowMergeDeathDataCancelled()
+        {
+            AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.MergeDeathDataCancelled)}[/]");
+        }
+
+        public void ShowMergeDeathDataNoFiles(string folderPath)
+        {
+            AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.MergeDeathDataFileNotFound, Markup.Escape(folderPath))}[/]");
         }
     }
 }

@@ -4,6 +4,7 @@
     {
         public static readonly string SettingsFile = "settings.json";
         public static readonly string DeathDataFile = "deathdata.json";
+        public static readonly string OtherDeathDataFolder = "other_death_data";
     }
 
     public static class TranslationKeys
@@ -76,6 +77,12 @@
         public const string ClearDeathDataConfirm = "deathdata.clear_confirm";
         public const string ClearDeathDataSuccess = "deathdata.clear_success";
         public const string ClearDeathDataCancelled = "deathdata.clear_cancelled";
+        public const string MergeDeathData = "deathdata.merge";
+        public const string MergeDeathDataPrompt = "deathdata.merge_prompt";
+        public const string MergeDeathDataSuccess = "deathdata.merge_success";
+        public const string MergeDeathDataCancelled = "deathdata.merge_cancelled";
+        public const string MergeDeathDataError = "deathdata.merge_error";
+        public const string MergeDeathDataFileNotFound = "deathdata.merge_file_not_found";
     }
 
     public static class Translations
@@ -151,7 +158,13 @@
             [TranslationKeys.ClearDeathData] = new() { ["de"] = "Death-Daten löschen", ["en"] = "Clear Death Data" },
             [TranslationKeys.ClearDeathDataConfirm] = new() { ["de"] = "Möchtest du wirklich alle Death-Daten löschen?", ["en"] = "Do you really want to clear all death data?" },
             [TranslationKeys.ClearDeathDataSuccess] = new() { ["de"] = "Death-Daten wurden gelöscht!", ["en"] = "Death data has been cleared!" },
-            [TranslationKeys.ClearDeathDataCancelled] = new() { ["de"] = "Löschen abgebrochen.", ["en"] = "Clear cancelled." }
+            [TranslationKeys.ClearDeathDataCancelled] = new() { ["de"] = "Löschen abgebrochen.", ["en"] = "Clear cancelled." },
+            [TranslationKeys.MergeDeathData] = new() { ["de"] = "Death-Daten zusammenführen", ["en"] = "Merge Death Data" },
+            [TranslationKeys.MergeDeathDataPrompt] = new() { ["de"] = "Möchtest du die Dateien aus folgendem Ordner zusammenführen?\n{0}", ["en"] = "Do you want to merge the files from the following folder?\n{0}" },
+            [TranslationKeys.MergeDeathDataSuccess] = new() { ["de"] = "Death-Daten wurden zusammengeführt! ({0} Datei(en))", ["en"] = "Death data has been merged! ({0} file(s))" },
+            [TranslationKeys.MergeDeathDataCancelled] = new() { ["de"] = "Zusammenführen abgebrochen.", ["en"] = "Merge cancelled." },
+            [TranslationKeys.MergeDeathDataError] = new() { ["de"] = "Fehler beim Lesen der Datei: {0}", ["en"] = "Error reading file: {0}" },
+            [TranslationKeys.MergeDeathDataFileNotFound] = new() { ["de"] = "Keine JSON-Dateien im Ordner gefunden:\n{0}", ["en"] = "No JSON files found in folder:\n{0}" }
         };
     }
 

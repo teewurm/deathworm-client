@@ -1,8 +1,5 @@
-﻿using DeathWorm.Clients;
-using DeathWorm.Models;
+﻿using DeathWorm.Models;
 using DeathWorm.Repositories;
-using DeathWorm.Utils;
-using System.Diagnostics;
 
 namespace DeathWorm.Services
 {
@@ -104,6 +101,27 @@ namespace DeathWorm.Services
             {
                 _deathDataRepository.Clear();
                 _cachedDeathData = [];
+            }
+        }
+
+        public string GetOtherDeathDataDirectory()
+        {
+            return _deathDataRepository.OtherDeathDataDirectory;
+        }
+
+        public bool HasOtherDeathDataFiles()
+        {
+            return _deathDataRepository.GetOtherDeathDataFiles().Length > 0;
+        }
+
+        public (bool Success, int MergedCount) MergeFromOtherDeathDataFolder()
+        {
+            lock (_cacheLock)
+            {
+                var mergedCount = _deathDataRepository.MergeAllFromOtherDeathDataFolder();
+                _cachedDeathData = _deathDataRepository.Load();
+
+                return (mergedCount > 0, mergedCount);
             }
         }
     }

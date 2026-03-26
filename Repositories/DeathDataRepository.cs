@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json;
 using DeathWorm.Models;
 using DeathWorm.Utils;
 
@@ -8,11 +9,14 @@ namespace DeathWorm.Repositories
     {
         private readonly string _dataDirectory;
         private readonly string _dataFilePath;
+        private readonly string _otherDeathDataDirectory;
         private readonly object _fileLock = new();
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             WriteIndented = true
         };
+
+        public string OtherDeathDataDirectory => _otherDeathDataDirectory;
 
         public DeathDataRepository()
         {
@@ -20,6 +24,22 @@ namespace DeathWorm.Repositories
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "DeathWorm");
             _dataFilePath = Path.Combine(_dataDirectory, Constants.DeathDataFile);
+            _otherDeathDataDirectory = Path.Combine(_dataDirectory, Constants.OtherDeathDataFolder);
+
+            EnsureDirectoriesExist();
+        }
+
+        private void EnsureDirectoriesExist()
+        {
+            if (!Directory.Exists(_dataDirectory))
+            {
+                Directory.CreateDirectory(_dataDirectory);
+            }
+
+            if (!Directory.Exists(_otherDeathDataDirectory))
+            {
+                Directory.CreateDirectory(_otherDeathDataDirectory);
+            }
         }
 
         public void AddDeath(string playerName, DateTime timestamp)
@@ -101,6 +121,88 @@ namespace DeathWorm.Repositories
             lock (_fileLock)
             {
                 Save([]);
+            }
+        }
+
+        public List<DeathData>? LoadFromFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            try
+            {
+                var json = File.ReadAllText(filePath);
+                return JsonSerializer.Deserialize<List<DeathData>>(json, _jsonOptions);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public string[] GetOtherDeathDataFiles()
+        {
+            if (!Directory.Exists(_otherDeathDataDirectory))
+            {
+                return [];
+            }
+
+            return Directory.GetFiles(_otherDeathDataDirectory, "*.json");
+        }
+
+        public int MergeAllFromOtherDeathDataFolder()
+        {
+            var files = GetOtherDeathDataFiles();
+            var mergedCount = 0;
+
+            foreach (var file in files)
+            {
+                var externalData = LoadFromFile(file);
+                if (externalData != null)
+                {
+                    Merge(externalData);
+                    mergedCount++;
+                }
+            }
+
+            return mergedCount;
+        }
+
+        public void Merge(List<DeathData> externalData)
+        {
+            lock (_fileLock)
+            {
+                var currentData = Load();
+
+                foreach (var externalPlayer in externalData)
+                {
+                    var existingPlayer = currentData.FirstOrDefault(d => d.PlayerName == externalPlayer.PlayerName);
+
+                    if (existingPlayer == null)
+                    {
+                        // Spieler existiert nicht, komplett hinzufügen
+                        currentData.Add(new DeathData
+                        {
+                            PlayerName = externalPlayer.PlayerName,
+                            Timestamps = externalPlayer.Timestamps.Distinct().ToList()
+                        });
+                    }
+                    else
+                    {
+                        // Spieler existiert, Timestamps zusammenführen (ohne Duplikate)
+                        var mergedTimestamps = existingPlayer.Timestamps
+                            .Union(externalPlayer.Timestamps)
+                            .Distinct()
+                            .OrderBy(t => t)
+                            .ToList();
+
+                        existingPlayer.Timestamps = mergedTimestamps;
+                    }
+                }
+
+                Save(currentData);
             }
         }
     }
