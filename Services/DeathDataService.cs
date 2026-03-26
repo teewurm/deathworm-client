@@ -18,6 +18,14 @@ namespace DeathWorm.Services
             _cachedDeathData = _deathDataRepository.Load();
         }
 
+        public void RefreshCache()
+        {
+            lock (_cacheLock)
+            {
+                _cachedDeathData = _deathDataRepository.Load();
+            }
+        }
+
         public void AddDeath(string playerName, DateTime timestamp)
         {
             lock (_cacheLock)

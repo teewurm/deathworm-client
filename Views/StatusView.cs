@@ -42,6 +42,8 @@ namespace DeathWorm.Views
 
         public void Show(CancellationToken cancellationToken)
         {
+            _deathDataService.RefreshCache();
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 var action = ShowLiveStatus(cancellationToken);
