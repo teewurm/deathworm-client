@@ -97,5 +97,14 @@ namespace DeathWorm.Services
                 }
             }
         }
+
+        public void Clear()
+        {
+            lock (_cacheLock)
+            {
+                _deathDataRepository.Clear();
+                _cachedDeathData = [];
+            }
+        }
     }
 }

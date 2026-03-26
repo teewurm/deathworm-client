@@ -70,6 +70,12 @@
         public const string Distribution = "status.distribution";
         public const string Connection = "status.connection";
         public const string BackToMainMenu = "status.back_to_main";
+
+        // Death Data
+        public const string ClearDeathData = "deathdata.clear";
+        public const string ClearDeathDataConfirm = "deathdata.clear_confirm";
+        public const string ClearDeathDataSuccess = "deathdata.clear_success";
+        public const string ClearDeathDataCancelled = "deathdata.clear_cancelled";
     }
 
     public static class Translations
@@ -139,7 +145,13 @@
             [TranslationKeys.Deaths] = new() { ["de"] = "Tode", ["en"] = "Deaths" },
             [TranslationKeys.Distribution] = new() { ["de"] = "Verteilung", ["en"] = "Distribution" },
             [TranslationKeys.Connection] = new() { ["de"] = "Verbindung", ["en"] = "Connection" },
-            [TranslationKeys.BackToMainMenu] = new() { ["de"] = "Zurück zum Hauptmenü", ["en"] = "Back to Main Menu" }
+            [TranslationKeys.BackToMainMenu] = new() { ["de"] = "Zurück zum Hauptmenü", ["en"] = "Back to Main Menu" },
+
+            // Death Data
+            [TranslationKeys.ClearDeathData] = new() { ["de"] = "Death-Daten löschen", ["en"] = "Clear Death Data" },
+            [TranslationKeys.ClearDeathDataConfirm] = new() { ["de"] = "Möchtest du wirklich alle Death-Daten löschen?", ["en"] = "Do you really want to clear all death data?" },
+            [TranslationKeys.ClearDeathDataSuccess] = new() { ["de"] = "Death-Daten wurden gelöscht!", ["en"] = "Death data has been cleared!" },
+            [TranslationKeys.ClearDeathDataCancelled] = new() { ["de"] = "Löschen abgebrochen.", ["en"] = "Clear cancelled." }
         };
     }
 

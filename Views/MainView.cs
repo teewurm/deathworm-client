@@ -57,6 +57,7 @@ namespace DeathWorm.Views
                 choices.Add(_t.Get(TranslationKeys.SendChat));
             }
 
+            choices.Add(_t.Get(TranslationKeys.ClearDeathData));
             choices.Add(_t.Get(TranslationKeys.Exit));
 
             return AnsiConsole.Prompt(
@@ -170,6 +171,26 @@ namespace DeathWorm.Views
         {
             AnsiConsole.MarkupLine($"[grey]{_t.Get(TranslationKeys.PressKeyToContinue)}[/]");
             Console.ReadKey(true);
+        }
+
+        public bool ConfirmClearDeathData()
+        {
+            var choice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title($"[red]{_t.Get(TranslationKeys.ClearDeathDataConfirm)}[/]")
+                    .AddChoices(_t.Get(TranslationKeys.Yes), _t.Get(TranslationKeys.No)));
+
+            return choice == _t.Get(TranslationKeys.Yes);
+        }
+
+        public void ShowClearDeathDataSuccess()
+        {
+            AnsiConsole.MarkupLine($"[green]{_t.Get(TranslationKeys.ClearDeathDataSuccess)}[/]");
+        }
+
+        public void ShowClearDeathDataCancelled()
+        {
+            AnsiConsole.MarkupLine($"[yellow]{_t.Get(TranslationKeys.ClearDeathDataCancelled)}[/]");
         }
     }
 }

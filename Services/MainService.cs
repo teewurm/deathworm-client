@@ -76,6 +76,11 @@ namespace DeathWorm.Services
                     SendChat();
                     _view.WaitForKeyPress();
                 }
+                else if (choice == _t.Get(TranslationKeys.ClearDeathData))
+                {
+                    ClearDeathData();
+                    _view.WaitForKeyPress();
+                }
                 else if (choice == _t.Get(TranslationKeys.Exit))
                 {
                     _lifetime.StopApplication();
@@ -172,6 +177,18 @@ namespace DeathWorm.Services
             {
                 _view.ShowError(result.ErrorMessage ?? "Unknown error");
             }
+        }
+
+        private void ClearDeathData()
+        {
+            if (!_view.ConfirmClearDeathData())
+            {
+                _view.ShowClearDeathDataCancelled();
+                return;
+            }
+
+            _viewModel.ClearDeathData();
+            _view.ShowClearDeathDataSuccess();
         }
     }
 }

@@ -1,6 +1,8 @@
 using DeathWorm.Clients;
+using DeathWorm.Clients;
 using DeathWorm.Models;
 using DeathWorm.Repositories;
+using DeathWorm.Services;
 
 namespace DeathWorm.ViewModels
 {
@@ -8,16 +10,19 @@ namespace DeathWorm.ViewModels
     {
         private readonly SettingsRepository _settingsRepository;
         private readonly ArchipelagoClientService _archipelagoService;
+        private readonly DeathDataService _deathDataService;
 
         public AppSettings Settings { get; private set; }
         public bool IsConnected => _archipelagoService.IsConnected;
 
         public MainViewModel(
             SettingsRepository settingsRepository,
-            ArchipelagoClientService archipelagoService)
+            ArchipelagoClientService archipelagoService,
+            DeathDataService deathDataService)
         {
             _settingsRepository = settingsRepository;
             _archipelagoService = archipelagoService;
+            _deathDataService = deathDataService;
             Settings = _settingsRepository.Load();
         }
 
@@ -64,6 +69,11 @@ namespace DeathWorm.ViewModels
         public ConnectResult Say(string message)
         {
             return _archipelagoService.Say(message);
+        }
+
+        public void ClearDeathData()
+        {
+            _deathDataService.Clear();
         }
     }
 }

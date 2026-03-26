@@ -95,5 +95,13 @@ namespace DeathWorm.Repositories
                 }
             }
         }
+
+        public void Clear()
+        {
+            lock (_fileLock)
+            {
+                Save([]);
+            }
+        }
     }
 }
