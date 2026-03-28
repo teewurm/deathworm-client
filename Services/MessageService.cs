@@ -17,7 +17,7 @@ namespace DeathWorm.Services
         {
             lock (_messagesLock)
             {
-                _messages.Add(new Message(DateTime.Now, Markup.Escape(text)));
+                _messages.Add(new Message(DateTime.Now, text));
                 if (_messages.Count > MaxMessages)
                     _messages.RemoveAt(0);
             }
